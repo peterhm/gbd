@@ -197,6 +197,10 @@ def age_specific_rate(model, data_type, reference_area='all', reference_sex='tot
                 rate_model.normal_model(name, vars['pi'], vars['sigma'], data['value'], data['standard_error'])
                 )
         elif rate_type == 'binom':
+            missing_ess = pl.isnan(data['effective_sample_size']) | (data['effective_sample_size'] < 0)
+            if sum(missing_ess) > 0:
+                print 'WARNING: %d rows of %s data has invalid quantification of uncertainty.' % (sum(missing_ess), name)
+                data['effective_sample_size'][missing_ess] = 0.0
             vars += rate_model.binom(name, vars['pi'], data['value'], data['effective_sample_size'])
         elif rate_type == 'beta_binom':
             vars += rate_model.beta_binom(name, vars['pi'], data['value'], data['effective_sample_size'])
