@@ -3,6 +3,7 @@ import json
 import pandas 
 import pymc as mc
 from time import clock
+import pylab as pl
 
 full_name = {'p': 'prevalence', 
              'i': 'incidence', 
@@ -114,7 +115,7 @@ def find_fnrfx(model, disease, data_type, country, sex, year):
 def mare(model, data_type):
     pred = model.vars[data_type]['p_pred'].trace().mean(0)
     obs = model.get_data(data_type).value
-    mare = median((abs(pred - obs)/obs)*100)
+    mare = pl.median((pl.abs(pred - obs)/obs)*100)
     return mare
 
 def data_only(model, disease, data_type, country, sex, year, iter, burn, thin):
@@ -224,7 +225,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     # inflate variance 
     mu_rate_mean = prior.mean(0)
-    sigma_rate = cov((prior-array([mu_rate_mean for _ in range(1000)])).T)   # TODO: what difference removing and not removing mean?
+    sigma_rate = cov((prior-array([mu_rate_mean for _ in range(1000)])).T)   
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
         for j in range(101):
