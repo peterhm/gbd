@@ -117,7 +117,7 @@ def mare(model, data_type):
     mare = median((abs(pred - obs)/obs)*100)
     return mare
 
-def data_only(model, data_type, country, sex, year, iter, burn, thin):
+def data_only(model, disease, data_type, country, sex, year, iter, burn, thin):
     '''data only'''
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -256,7 +256,7 @@ def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin
     # METHODS
     # data only 
     do_model = load_new_model(disease, country, sex=sex)
-    do_model, do_pred, do_t, do_mare = data_only(do_model, data_type, country, sex, year, iter, burn, thin)
+    do_model, do_pred, do_t, do_mare = data_only(do_model, disease, data_type, country, sex, year, iter, burn, thin)
     # GBD prior 
     p_model = load_new_model(disease, country, sex=sex)
     p_model, p_pred, p_est, p_t, p_mare = gbd_prior(p_model, disease, data_type, country, sex, year, iter, burn, thin)
