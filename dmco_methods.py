@@ -134,8 +134,8 @@ def gbd_prior(model, disease, data_type, country, sex, year, iter, burn, thin, v
     '''empirical prior from GBD2010 (variance inflation optional)'''
     # get prior
     gbd_est = get_emp(disease, data_type, country, sex, year)
-    mu_rate = array(gbd_est.mean(1))
-    sigma_rate = array(gbd_est.std(1))
+    mu_rate = pl.array(gbd_est.mean(1))
+    sigma_rate = pl.array(gbd_est.std(1))
     
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=mu_rate, sigma_age_parent=sigma_rate*var_inflation)
@@ -152,13 +152,13 @@ def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inf
     # get prior
     gbd_est = get_emp(disease, data_type, country, sex, year)
     if log_space == True:
-        mu_rate = log(array(gbd_est))
-        mu_rate_mean = log(array(gbd_est)).mean(1)
-        covar = cov(log(array(gbd_est))-array([mu_rate_mean for _ in range(1000)]).T)
+        mu_rate = log(pl.array(gbd_est))
+        mu_rate_mean = log(pl.array(gbd_est)).mean(1)
+        covar = cov(log(pl.array(gbd_est))-pl.array([mu_rate_mean for _ in range(1000)]).T)
     else:
-        mu_rate = array(gbd_est)
-        mu_rate_mean = array(gbd_est).mean(1)
-        covar = cov(array(gbd_est)-array([mu_rate_mean for _ in range(1000)]).T)
+        mu_rate = pl.array(gbd_est)
+        mu_rate_mean = pl.array(gbd_est).mean(1)
+        covar = cov(pl.array(gbd_est)-pl.array([mu_rate_mean for _ in range(1000)]).T)
         
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -187,9 +187,9 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     '''discrete'''
     # get prior
     gbd_est = get_emp(disease, data_type, country, sex, year)
-    mu_rate_log = log(array(gbd_est))
-    mu_rate_log_mean = log(array(gbd_est)).mean(1)
-    cov_log = cov(log(array(gbd_est))-array([mu_rate_log_mean for _ in range(1000)]).T)
+    mu_rate_log = log(pl.array(gbd_est))
+    mu_rate_log_mean = log(pl.array(gbd_est)).mean(1)
+    cov_log = cov(log(pl.array(gbd_est))-pl.array([mu_rate_log_mean for _ in range(1000)]).T)
 
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -225,7 +225,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     # inflate variance 
     mu_rate_mean = prior.mean(0)
-    sigma_rate = cov((prior-array([mu_rate_mean for _ in range(1000)])).T)   
+    sigma_rate = cov((prior-pl.array([mu_rate_mean for _ in range(1000)])).T)   
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
         for j in range(101):
@@ -286,8 +286,8 @@ def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin
         model = plotting[p]['model']
         dismod3.graphics.plot_data_bars(model.get_data(data_type))
 
-        if (p in [2, 6]): errorbar(arange(101), plotting[p]['prior'].mean(1), 1.96*array(plotting[p]['prior'].std(1)*10), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
-        else: errorbar(arange(101), plotting[p]['prior'].mean(1), 1.96*array(plotting[p]['prior'].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
+        if (p in [2, 6]): errorbar(arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)*10), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
+        else: errorbar(arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
         plot(plotting[p]['prior'].mean(1), 'k', linewidth=2, label='Prior')
         plot(plotting[p]['pred'].mean(0), 'r', linewidth=2, label=plotting[p]['name'])
         ui = mc.utils.hpd(plotting[p]['pred'], .05)
