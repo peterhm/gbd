@@ -115,7 +115,7 @@ def find_fnrfx(model, disease, data_type, country, sex, year):
 def mare(model, data_type):
     pred = model.vars[data_type]['p_pred'].trace().mean(0)
     obs = model.get_data(data_type).value
-    mare = pl.median((pl.abs(pred - obs)/obs)*100)
+    mare = pl.median((abs(pred - obs)/obs)*100)
     return mare
 
 def data_only(model, disease, data_type, country, sex, year, iter, burn, thin):
