@@ -222,7 +222,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     dm.vars += dismod3.ism.age_specific_rate(dm, data_type, geo_info(country,disease), sex, year, mu_age_parent=None, sigma_age_parent=None)
     start = clock()
     dismod3.fit.fit_asr(dm, data_type, iter=iter, thin=thin, burn=burn)
-    prior = dismod3.covariates.predict_for(dm, dm.parameters[data_type], geo_info(country, disease), sex, year, country, sex, year, True, dm.vars[data_type], 0, 1)
+    prior = dismod3.covariates.predict_for(dm, dm.parameters[data_type], geo_info(country, disease), sex, year, country, sex, year, True, dm.vars[data_type], 0, 1).T
     
     # inflate variance 
     mu_rate_mean = prior.mean(0)
@@ -252,7 +252,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1)
     
-    return model, pred, prior.T, time, mare(model, data_type)
+    return model, pred, prior, time, mare(model, data_type)
     
 def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin):
     # METHODS
