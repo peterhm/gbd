@@ -225,7 +225,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     prior = dismod3.covariates.predict_for(dm, dm.parameters[data_type], geo_info(country, disease), sex, year, country, sex, year, True, dm.vars[data_type], 0, 1).T
     
     # inflate variance 
-    mu_rate_mean = prior.mean(0)
+    mu_rate_mean = prior.mean(1)
     sigma_rate = pl.cov(prior)   
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
