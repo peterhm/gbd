@@ -152,13 +152,13 @@ def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inf
     # get prior
     gbd_est = get_emp(disease, data_type, country, sex, year)
     if log_space == True:
-        mu_rate = log(pl.array(gbd_est))
-        mu_rate_mean = log(pl.array(gbd_est)).mean(1)
-        covar = cov(log(pl.array(gbd_est))-pl.array([mu_rate_mean for _ in range(1000)]).T)
+        mu_rate = pl.log(pl.array(gbd_est))
+        mu_rate_mean = pl.log(pl.array(gbd_est)).mean(1)
+        covar = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_mean for _ in range(1000)]).T)
     else:
         mu_rate = pl.array(gbd_est)
         mu_rate_mean = pl.array(gbd_est).mean(1)
-        covar = cov(pl.array(gbd_est)-pl.array([mu_rate_mean for _ in range(1000)]).T)
+        covar = pl.cov(pl.array(gbd_est)-pl.array([mu_rate_mean for _ in range(1000)]).T)
         
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -168,11 +168,11 @@ def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inf
     if log_space == True:
         @mc.potential
         def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
-            return mc.mv_normal_cov_like(log(mu_child), mu, C+.01*eye(101))
+            return mc.mv_normal_cov_like(pl.log(mu_child), mu, C+.01*pl.eye(101))
     else:
         @mc.potential
         def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
-            return mc.mv_normal_cov_like(mu_child, mu, C+.01*eye(101))
+            return mc.mv_normal_cov_like(mu_child, mu, C+.01*pl.eye(101))
 
     model.vars[data_type]['parent_similarity'] = parent_similarity
     start = clock()
@@ -187,9 +187,9 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     '''discrete'''
     # get prior
     gbd_est = get_emp(disease, data_type, country, sex, year)
-    mu_rate_log = log(pl.array(gbd_est))
-    mu_rate_log_mean = log(pl.array(gbd_est)).mean(1)
-    cov_log = cov(log(pl.array(gbd_est))-pl.array([mu_rate_log_mean for _ in range(1000)]).T)
+    mu_rate_log = pl.log(pl.array(gbd_est))
+    mu_rate_log_mean = pl.log(pl.array(gbd_est)).mean(1)
+    cov_log = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_log_mean for _ in range(1000)]).T)
 
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -199,7 +199,7 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     @mc.potential
     def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_log, C=cov_log*var_inflation):
         i = int(rand()*1000)
-        return mc.mv_normal_cov_like(log(mu_child)[::10], mu[::10,i], C[::10,::10]+.001*eye(11))
+        return mc.mv_normal_cov_like(pl.log(mu_child)[::10], mu[::10,i], C[::10,::10]+.001*pl.eye(11))
 
     model.vars[data_type]['parent_similarity'] = parent_similarity
     start = clock()
@@ -225,7 +225,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     # inflate variance 
     mu_rate_mean = prior.mean(0)
-    sigma_rate = cov((prior-pl.array([mu_rate_mean for _ in range(1000)])).T)   
+    sigma_rate = pl.cov((prior-pl.array([mu_rate_mean for _ in range(1000)])).T)   
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
         for j in range(101):
@@ -239,11 +239,11 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     if log_space == True:
         @mc.potential
         def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=sigma_rate):
-            return mc.mv_normal_cov_like(log(mu_child), mu, C+.001*eye(101))
+            return mc.mv_normal_cov_like(pl.log(mu_child), mu, C+.001*pl.eye(101))
     else:
         @mc.potential
         def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=sigma_rate):
-            return mc.mv_normal_cov_like(mu_child, mu, C+.001*eye(101))
+            return mc.mv_normal_cov_like(mu_child, mu, C+.001*pl.eye(101))
 
     model.vars[data_type]['parent_similarity'] = parent_similarity
     dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
