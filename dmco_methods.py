@@ -214,6 +214,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     '''heterogeneity inflation for multivariate normal distribution'''
     # load regional model
     if sex != 'total': sexes=[sex, 'total']
+    else: sexes = sex
     dm = load_new_model(disease, geo_info(country, disease), sexes)
     
     # create heterogeneity covariate and create prior
@@ -229,7 +230,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
         for j in range(101):
-            sigma_rate[i,j] *= exp(i*zeta + j*zeta)   # FIXME: is this the correct way to gross-up the uncertainty???  Hannah will do a little simulation study to test
+            sigma_rate[i,j] *= pl.exp(i*zeta + j*zeta)   # FIXME: is this the correct way to gross-up the uncertainty???  Hannah will do a little simulation study to test
     
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -270,8 +271,7 @@ def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin
                                                                        iter, burn, thin, var_inflation=1, log_space=True)
     # Heterogeneity
     mvnhi_model = load_new_model(disease, country, sex=sex)
-    mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, 
-                                                                            iter, burn, thin, log_space=False)
+    mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
     
     # PLOTTING
     plotting = [{'model':do_model, 'pred':do_pred, 'prior':zeros((101,2)), 'time':do_t, 'mare':do_mare, 'name':'Data only'},
