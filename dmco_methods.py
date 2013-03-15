@@ -154,11 +154,11 @@ def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inf
     if log_space == True:
         mu_rate = pl.log(pl.array(gbd_est))
         mu_rate_mean = pl.log(pl.array(gbd_est)).mean(1)
-        covar = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_mean for _ in range(1000)]).T)
+        covar = pl.cov(pl.log(pl.array(gbd_est)))
     else:
         mu_rate = pl.array(gbd_est)
         mu_rate_mean = pl.array(gbd_est).mean(1)
-        covar = pl.cov(pl.array(gbd_est)-pl.array([mu_rate_mean for _ in range(1000)]).T)
+        covar = pl.cov(pl.array(gbd_est))
         
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -189,7 +189,7 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     gbd_est = get_emp(disease, data_type, country, sex, year)
     mu_rate_log = pl.log(pl.array(gbd_est))
     mu_rate_log_mean = pl.log(pl.array(gbd_est)).mean(1)
-    cov_log = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_log_mean for _ in range(1000)]).T)
+    cov_log = pl.cov(pl.log(pl.array(gbd_est)))
 
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -225,7 +225,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     # inflate variance 
     mu_rate_mean = prior.mean(0)
-    sigma_rate = pl.cov((prior-pl.array([mu_rate_mean for _ in range(1000)])).T)   
+    sigma_rate = pl.cov(prior)   
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
         for j in range(101):
