@@ -113,7 +113,10 @@ def find_fnrfx(model, disease, data_type, country, sex, year):
                                                                  sigma = emp_fe.ix[col, 'sigma_coeff'])    
 
 def mare(model, data_type):
-    pred = model.vars[data_type]['p_pred'].trace().mean(0)
+    try:
+        pred = model.vars[data_type]['p_pred'].trace().mean(0)
+    except:
+        pred = 0    
     obs = model.get_data(data_type).value
     mare = pl.median((abs(pred - obs)/obs)*100)
     return mare
@@ -267,18 +270,17 @@ def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin
     mvn_model, mvn_pred, mvn_est, mvn_t, mvn_mare = mvn(mvn_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False)
     # MVN log space
     mvnlog_model = load_new_model(disease, country, sex=sex)
-    mvnlog_model, mvnlog_pred, mvnlog_est, mvnlog_t, mvnlog_mare = mvn(mvnlog_model, disease, data_type, country, sex, year, 
-                                                                       iter, burn, thin, var_inflation=1, log_space=True)
+    mvnlog_model, mvnlog_pred, mvnlog_est, mvnlog_t, mvnlog_mare = mvn(mvnlog_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=True)
     # Heterogeneity
     mvnhi_model = load_new_model(disease, country, sex=sex)
     mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
     
     # PLOTTING
-    plotting = [{'model':do_model, 'pred':do_pred, 'prior':zeros((101,2)), 'time':do_t, 'mare':do_mare, 'name':'Data only'},
+    plotting = [{'model':do_model, 'pred':do_pred, 'prior':pl.zeros((101,2)), 'time':do_t, 'mare':do_mare, 'name':'Data only'},
                 {'model':p_model, 'pred':p_pred, 'prior':p_est, 'time':p_t, 'mare':p_mare, 'name':'GBD prior'},
                 {'model':mvn_model, 'pred':mvn_pred, 'prior':mvn_est, 'time':mvn_t, 'mare':mvn_mare, 'name':'MVN'},
                 {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':mvnlog_est, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'},
-                {'model':mvni_model, 'pred':mvni_pred, 'prior':mvni_est, 'time':mvni_t, 'mare':mvni_mare, 'name':'MVN heterogeneous inflation'}]
+                {'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':mvnhi_est, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'MVN heterogeneous inflation'}]
 
     figure(figsize=(24,10))
     for p in range(len(plotting)):
@@ -305,4 +307,6 @@ def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin
             axis([0,100,0,.12])
             legend(loc='upper left')
             title('%s (%s), %s %s %s'%(name, disease, country, sex, year))
+            
+    pl.savefig('/homes/peterhm/gbd/book/dmco-%s_%s_%s_%s_%s.png'%(name, disease, country, sex, year))
     
