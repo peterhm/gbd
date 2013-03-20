@@ -225,10 +225,10 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     dm.vars += dismod3.ism.age_specific_rate(dm, data_type, geo_info(country,disease), sex, year, mu_age_parent=None, sigma_age_parent=None)
     start = clock()
     dismod3.fit.fit_asr(dm, data_type, iter=iter, thin=thin, burn=burn)
-    prior = dismod3.covariates.predict_for(dm, dm.parameters[data_type], geo_info(country, disease), sex, year, country, sex, year, True, dm.vars[data_type], 0, 1).T
+    prior = dm.vars[data_type]['mu_age']
     
     # inflate variance 
-    mu_rate_mean = prior.mean(1)
+    mu_rate_mean = prior.trace.mean(0)
     sigma_rate = pl.cov(prior)   
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
@@ -242,11 +242,11 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     if log_space == True:
         @mc.potential
-        def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=sigma_rate):
+        def parent_similarity(mu_child=prior, mu=mu_rate_mean, C=sigma_rate):
             return mc.mv_normal_cov_like(pl.log(mu_child), mu, C+.001*pl.eye(101))
     else:
         @mc.potential
-        def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=sigma_rate):
+        def parent_similarity(mu_child=prior, mu=mu_rate_mean, C=sigma_rate):
             return mc.mv_normal_cov_like(mu_child, mu, C+.001*pl.eye(101))
 
     model.vars[data_type]['parent_similarity'] = parent_similarity
