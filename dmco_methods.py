@@ -288,13 +288,13 @@ def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin
         model = plotting[p]['model']
         dismod3.graphics.plot_data_bars(model.get_data(data_type))
 
-        if (p in [2, 6]): errorbar(arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)*10), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
-        else: errorbar(arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
+        if (p in [2, 6]): pl.errorbar(pl.arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)*10), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
+        else: pl.errorbar(pl.arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
         pl.plot(plotting[p]['prior'].mean(1), 'k', linewidth=2, label='Prior')
         pl.plot(plotting[p]['pred'].mean(0), 'r', linewidth=2, label=plotting[p]['name'])
         ui = mc.utils.hpd(plotting[p]['pred'], .05)
-        plot(ui[:,0], 'r--', linewidth=1)
-        plot(ui[:,1], 'r--', linewidth=1)
+        pl.plot(ui[:,0], 'r--', linewidth=1)
+        pl.plot(ui[:,1], 'r--', linewidth=1)
 
         pl.axis([0,100,0,ymax])
         pl.legend(loc='upper left', title='%s: \nmare=%s, \ntime=%ss'%(plotting[p]['name'], round(plotting[p]['mare'],2), plotting[p]['time']))
@@ -304,7 +304,7 @@ def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin
         pl.plot(plotting[p]['pred'].mean(0), linewidth=2, label=plotting[p]['name'])   
         if p == len(plotting)-1: 
             dismod3.graphics.plot_data_bars(model.get_data(data_type))
-            pl.axis([0,100,0,.12])
+            pl.axis([0,100,0,ymax])
             pl.legend(loc='upper left')
             pl.title('%s (%s), %s %s %s'%(name, disease, country, sex, year))
             
