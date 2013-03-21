@@ -225,10 +225,10 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     dm.vars += dismod3.ism.age_specific_rate(dm, data_type, geo_info(country,disease), sex, year, mu_age_parent=None, sigma_age_parent=None)
     start = clock()
     dismod3.fit.fit_asr(dm, data_type, iter=iter, thin=thin, burn=burn)
-    prior = dm.vars[data_type]['mu_age']
+    prior = dm.vars[data_type]['mu_age'].trace().T
     
     # inflate variance 
-    mu_rate_mean = prior.trace.mean(0)
+    mu_rate_mean = prior.mean(1)
     sigma_rate = pl.cov(prior)   
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
