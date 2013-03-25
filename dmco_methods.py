@@ -229,7 +229,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     # inflate variance 
     mu_rate_mean = prior.mean(1)
-    sigma_rate = pl.cov(prior)   
+    sigma_rate = pl.cov(prior)
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
         for j in range(101):
@@ -257,7 +257,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     return model, pred, prior, time, mare(model, data_type)
     
-def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin):
+def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
     # METHODS
     # data only 
     do_model = load_new_model(disease, country, sex=sex)
@@ -272,16 +272,24 @@ def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin
     mvnlog_model = load_new_model(disease, country, sex=sex)
     mvnlog_model, mvnlog_pred, mvnlog_est, mvnlog_t, mvnlog_mare = mvn(mvnlog_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=True)
     # Heterogeneity
-    mvnhi_model = load_new_model(disease, country, sex=sex)
-    mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
+    #mvnhi_model = load_new_model(disease, country, sex=sex)
+    #mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
     
     # PLOTTING
     plotting = [{'model':do_model, 'pred':do_pred, 'prior':pl.zeros((101,2)), 'time':do_t, 'mare':do_mare, 'name':'Data only'},
                 {'model':p_model, 'pred':p_pred, 'prior':p_est, 'time':p_t, 'mare':p_mare, 'name':'GBD prior'},
                 {'model':mvn_model, 'pred':mvn_pred, 'prior':mvn_est, 'time':mvn_t, 'mare':mvn_mare, 'name':'MVN'},
-                {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':mvnlog_est, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'},
-                {'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':mvnhi_est, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'MVN heterogeneous inflation'}]
+                {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':mvnlog_est, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'}]#,
+                #{'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':mvnhi_est, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'MVN heterogeneous inflation'}]
 
+    # determine ymax from sim
+    ymax = 0.
+    for p in range(len(plotting)):
+        if max(plotting[p]['prior'].mean(1)) > ymax: ymax = max(plotting[p]['prior'].mean(1))
+        elif max(plotting[p]['pred'].mean(0)) > ymax: ymax = max(plotting[p]['pred'].mean(0))
+    ymax = ymax*1.05
+    
+    # plot figure
     pl.figure(figsize=(24,10))
     for p in range(len(plotting)):
         pl.subplot(3,6,(p/3)*3+p+4)
