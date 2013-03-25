@@ -52,17 +52,31 @@ def disease_info(obj):
         print 'Invalid entry. Please enter disease number or name'
         return []
 
-def load_new_model(disease, country='all', sex=['total', 'male', 'female']):
-    '''create disease model with relavtive data'''
+def load_new_model(disease, country='all', sex=['total', 'male', 'female'], cov=''):
+    '''create disease model with relavtive data
+    cov : str
+      method to handle covariates
+      default is nothing
+      options include, 
+        - 'drop' : drop all covartiates
+        - 'zero' : missing values replaced with 0
+    '''
     model = dismod3.data.load('/home/j/Project/dismod/output/dm-%s'%disease)
     # keep relative data
     if len(sex) == 1: model.keep(areas=[country], sexes=[sex])
     else: model.keep(areas=[country], sexes=sex)
+    
+    if cov: 
+        col = model.input_data.filter(like='x_').columns
+        for i in col:
+            if cov == 'drop': model.input_data = model.input_data.drop(i, 1)
+            elif cov == 'zero': model.input_data[i] = model.input_data[i].fillna([0])
+    
     return model
 
 def geo_info(country, disease):
-    '''find country name and region'''
-    global_model = load_new_model(disease, 'all', 'total')
+    '''find country region from name'''
+    global_model = load_new_model(disease, 'all', ['total', 'male', 'female'])
     region = global_model.hierarchy.in_edges(country)[0][0]
     return region
 
