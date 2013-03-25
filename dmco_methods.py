@@ -287,9 +287,8 @@ def compare(name, disease, data_type, country, sex, year, ymax, iter, burn, thin
         pl.subplot(3,6,(p/3)*3+p+4)
         model = plotting[p]['model']
         dismod3.graphics.plot_data_bars(model.get_data(data_type))
-
-        if (p in [2, 6]): pl.errorbar(pl.arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)*10), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
-        else: pl.errorbar(pl.arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
+        
+        pl.errorbar(pl.arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
         pl.plot(plotting[p]['prior'].mean(1), 'k', linewidth=2, label='Prior')
         pl.plot(plotting[p]['pred'].mean(0), 'r', linewidth=2, label=plotting[p]['name'])
         ui = mc.utils.hpd(plotting[p]['pred'], .05)
