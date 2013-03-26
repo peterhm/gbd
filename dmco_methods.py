@@ -247,7 +247,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     zeta = dm.vars[data_type]['zeta'].stats()['mean']
     for i in range(101):
         for j in range(101):
-            sigma_rate[i,j] *= pl.exp(i*zeta + j*zeta)   # FIXME: is this the correct way to gross-up the uncertainty???  Hannah will do a little simulation study to test
+            sigma_rate[i,j] *= pl.exp(i*zeta + j*zeta)   # FIXME: is this the correct way to gross-up the uncertainty???
     
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -256,11 +256,11 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     if log_space == True:
         @mc.potential
-        def parent_similarity(mu_child=prior, mu=mu_rate_mean, C=sigma_rate):
+        def parent_similarity(mu_child=dm.vars[data_type]['mu_age'], mu=mu_rate_mean, C=sigma_rate):
             return mc.mv_normal_cov_like(pl.log(mu_child), mu, C+.001*pl.eye(101))
     else:
         @mc.potential
-        def parent_similarity(mu_child=prior, mu=mu_rate_mean, C=sigma_rate):
+        def parent_similarity(mu_child=dm.vars[data_type]['mu_age'], mu=mu_rate_mean, C=sigma_rate):
             return mc.mv_normal_cov_like(mu_child, mu, C+.001*pl.eye(101))
 
     model.vars[data_type]['parent_similarity'] = parent_similarity
