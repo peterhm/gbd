@@ -25,7 +25,7 @@ def disease_info(obj):
     bm_csv = pandas.read_csv(bm_path,index_col=None)
     dismod_models = bm_csv.groupby('dismod_model_number').apply(lambda df: df.ix[df.index[0], 'outcome_name'])
     dismod_models = dismod_models.drop([0], axis=0)
-    dismod_models = dict(sort(dismod_models))
+    dismod_models = dict(pl.sort(dismod_models))
     if type(obj)==str:
         # change Series object into dictionary
         from collections import defaultdict
@@ -143,7 +143,7 @@ def data_only(model, disease, data_type, country, sex, year, iter, burn, thin):
     dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
     time = clock() - start
     
-    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1)
+    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1).T
     
     return model, pred, time, mare(model, data_type)    
 
@@ -160,7 +160,7 @@ def gbd_prior(model, disease, data_type, country, sex, year, iter, burn, thin, v
     dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
     time = clock() - start
     
-    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1)
+    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1).T
     
     return model, pred, gbd_est, time, mare(model, data_type)    
 
@@ -196,7 +196,7 @@ def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inf
     dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
     time = clock() - start
     
-    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1)
+    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1).T
     
     return model, pred, gbd_est, time, mare(model, data_type)    
 
@@ -223,7 +223,7 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
     time = clock() - start
     
-    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1)
+    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1).T
     
     return model, pred, gbd_est, time, mare(model, data_type)
 
@@ -267,7 +267,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
     time = clock() - start
     
-    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1)
+    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1).T
     
     return model, pred, prior, time, mare(model, data_type)
     
@@ -286,21 +286,21 @@ def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
     mvnlog_model = load_new_model(disease, country, sex=sex)
     mvnlog_model, mvnlog_pred, mvnlog_est, mvnlog_t, mvnlog_mare = mvn(mvnlog_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=True)
     # Heterogeneity
-    #mvnhi_model = load_new_model(disease, country, sex=sex)
-    #mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
+    mvnhi_model = load_new_model(disease, country, sex=sex)
+    mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
     
     # PLOTTING
     plotting = [{'model':do_model, 'pred':do_pred, 'prior':pl.zeros((101,2)), 'time':do_t, 'mare':do_mare, 'name':'Data only'},
                 {'model':p_model, 'pred':p_pred, 'prior':p_est, 'time':p_t, 'mare':p_mare, 'name':'GBD prior'},
                 {'model':mvn_model, 'pred':mvn_pred, 'prior':mvn_est, 'time':mvn_t, 'mare':mvn_mare, 'name':'MVN'},
-                {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':mvnlog_est, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'}]#,
-                #{'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':mvnhi_est, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'MVN heterogeneous inflation'}]
+                {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':mvnlog_est, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'},
+                {'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':mvnhi_est, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'MVN heterogeneous inflation'}]
 
     # determine ymax from sim
     ymax = 0.
     for p in range(len(plotting)):
         if max(plotting[p]['prior'].mean(1)) > ymax: ymax = max(plotting[p]['prior'].mean(1))
-        elif max(plotting[p]['pred'].mean(0)) > ymax: ymax = max(plotting[p]['pred'].mean(0))
+        elif max(plotting[p]['pred'].mean(1)) > ymax: ymax = max(plotting[p]['pred'].mean(1))
     ymax = ymax*1.05
     
     # plot figure
@@ -312,8 +312,8 @@ def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
         
         pl.errorbar(pl.arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
         pl.plot(plotting[p]['prior'].mean(1), 'k', linewidth=2, label='Prior')
-        pl.plot(plotting[p]['pred'].mean(0), 'r', linewidth=2, label=plotting[p]['name'])
-        ui = mc.utils.hpd(plotting[p]['pred'], .05)
+        pl.plot(plotting[p]['pred'].mean(1), 'r', linewidth=2, label=plotting[p]['name'])
+        ui = mc.utils.hpd(plotting[p]['pred'].T, .05)
         pl.plot(ui[:,0], 'r--', linewidth=1)
         pl.plot(ui[:,1], 'r--', linewidth=1)
 
@@ -322,7 +322,7 @@ def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
 
     pl.subplot(1,2,1)
     for p in range(len(plotting)):
-        pl.plot(plotting[p]['pred'].mean(0), linewidth=2, label=plotting[p]['name'])   
+        pl.plot(plotting[p]['pred'].mean(1), linewidth=2, label=plotting[p]['name'])   
         if p == len(plotting)-1: 
             dismod3.graphics.plot_data_bars(model.get_data(data_type))
             pl.axis([0,100,0,ymax])
