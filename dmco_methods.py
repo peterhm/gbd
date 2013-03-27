@@ -52,21 +52,23 @@ def disease_info(obj):
         print 'Invalid entry. Please enter disease number or name'
         return []
 
-def load_new_model(disease, country='all', sex=['total', 'male', 'female'], cov=''):
+def load_new_model(disease, country='all', sex=['total', 'male', 'female'], cov='no'):
     '''create disease model with relavtive data
     cov : str
       method to handle covariates
-      default is nothing
+      default is nothing ('no')
       options include, 
         - 'drop' : drop all covartiates
         - 'zero' : missing values replaced with 0
+        - 'average' : missing values replaced with average of column
     '''
     model = dismod3.data.load('/home/j/Project/dismod/output/dm-%s'%disease)
     # keep relative data
     if len(sex) == 1: model.keep(areas=[country], sexes=[sex])
     else: model.keep(areas=[country], sexes=sex)
     
-    if cov: 
+    if (True in pl.isnan(pl.array(model.output_template.filter(like='x_')))) | (True in pl.isnan(pl.array(model.input_data.filter(like='x_')))): 
+        print 'Covariates missing, %s method used'%(cov)
         col = model.input_data.filter(like='x_').columns
         for i in col:
             if cov == 'drop': 
