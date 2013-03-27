@@ -69,8 +69,15 @@ def load_new_model(disease, country='all', sex=['total', 'male', 'female'], cov=
     if cov: 
         col = model.input_data.filter(like='x_').columns
         for i in col:
-            if cov == 'drop': model.input_data = model.input_data.drop(i, 1)
-            elif cov == 'zero': model.input_data[i] = model.input_data[i].fillna([0])
+            if cov == 'drop': 
+                model.input_data = model.input_data.drop(i,1)
+                model.output_template = model.output_template.drop(i,1)
+            elif cov == 'zero': 
+                model.input_data[i] = model.input_data[i].fillna([0])
+                model.output_template[i] = model.output_template[i].fillna([0])
+            elif cov == 'average': 
+                model.input_data[i] = model.input_data[i].fillna([model.input_data[i].mean()])
+                model.output_template[i] = model.output_template[i].fillna(model.output_template[i].mean())
     
     return model
 
@@ -304,9 +311,9 @@ def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
     ymax = ymax*1.05
     
     # plot figure
-    pl.figure(figsize=(24,10))
+    pl.figure(figsize=(28,8)) # for 9 subplots (24,10)
     for p in range(len(plotting)):
-        pl.subplot(3,6,(p/3)*3+p+4)
+        pl.subplot(2,6,(p/3)*3+p+4) # for 9 subplots (3,6,(p/3)*3+p+4)
         model = plotting[p]['model']
         dismod3.graphics.plot_data_bars(model.get_data(data_type))
         
