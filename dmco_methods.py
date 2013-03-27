@@ -173,7 +173,7 @@ def gbd_prior(model, disease, data_type, country, sex, year, iter, burn, thin, v
     
     return model, pred, gbd_est, time, mare(model, data_type)    
 
-def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=True):
+def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False):
     '''multivariate normal (variance inflation optional)'''
     # get prior
     gbd_est = get_emp(disease, data_type, country, sex, year)
@@ -236,7 +236,7 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     
     return model, pred, gbd_est, time, mare(model, data_type)
 
-def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thin, log_space=True):
+def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False):
     '''heterogeneity inflation for multivariate normal distribution'''
     # load regional model
     if sex != 'total': sexes=[sex, 'total']
