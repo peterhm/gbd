@@ -293,7 +293,13 @@ def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
     mvn_model, mvn_pred, mvn_est, mvn_t, mvn_mare = mvn(mvn_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False)
     # MVN log space
     mvnlog_model = load_new_model(disease, country, sex=sex)
-    mvnlog_model, mvnlog_pred, mvnlog_est, mvnlog_t, mvnlog_mare = mvn(mvnlog_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=True)
+    try: 
+        mvnlog_model, mvnlog_pred, mvnlog_est, mvnlog_t, mvnlog_mare = mvn(mvnlog_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=True)
+    except ValueError:
+        mvnlog_pred = pl.zeros((101,2))
+        mvnlog_est = pl.zeros((101,2))
+        mvnlog_t = pl.inf
+        mvnlog_mare = pl.inf
     # Heterogeneity
     mvnhi_model = load_new_model(disease, country, sex=sex)
     mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
@@ -339,4 +345,14 @@ def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
             pl.title('%s (%s), %s %s %s'%(name, disease, country, sex, year))
             
     pl.savefig('/homes/peterhm/gbd/book/dmco-%s_%s_%s_%s_%s.png'%(name, disease, country, sex, year))
-    
+
+def add_m_all(country):
+    try:
+        import scikits.statsmodels.iolib as pd
+        mortality = pandas.DataFrame(pd.genfromdta('/home/j/Project/Mortality/GBD Envelopes/04. Lifetables/02. MORTMatch/cluster/results/compiled/iso3_lt_mean_uncertainty.dta'))
+    except:
+        import scikits.statsmodels.lib.io as pd
+        mortality = pandas.DataFrame(pd.genfromdta('/home/j/Project/Mortality/GBD\ Envelopes/04.\ Lifetables/02.\ MORTMatch/cluster/results/compiled/iso3_lt_mean_uncertainty.dta'))
+    mortality = mortality.filter(like='mx')
+    iso3, age, sex, year
+
