@@ -173,8 +173,10 @@ def gbd_prior(model, disease, data_type, country, sex, year, iter, burn, thin, v
     
     return model, pred, gbd_est, time, mare(model, data_type)    
 
-def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False):
-    '''multivariate normal (variance inflation optional)'''
+def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, consistent=False, var_inflation=1, log_space=False):
+    '''multivariate normal (variance inflation optional)
+    consistent : str, 'asr' (single rate type model) or 'ism' (compartmental modeling)
+    '''
     # get prior
     gbd_est = get_emp(disease, data_type, country, sex, year)
     if log_space == True:
@@ -187,7 +189,10 @@ def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inf
         covar = pl.cov(pl.array(gbd_est))
         
     find_fnrfx(model, disease, data_type, country, sex, year)
-    model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
+    if consistent == False:
+        model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
+    else:
+        model.vars += dismod3.ism.consistent(model, country, sex, year)
     for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
         gamma_k.value = mu_rate_mean[a_k]
         
@@ -202,7 +207,11 @@ def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, var_inf
 
     model.vars[data_type]['parent_similarity'] = parent_similarity
     start = clock()
-    dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
+    if consistent == False:
+        dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
+    else:
+        dismod3.fit.fit_consistent(model, iter=iter, thin=thin, burn=burn)
+        
     time = clock() - start
     
     pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1).T
@@ -280,7 +289,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     
     return model, pred, prior, time, mare(model, data_type)
     
-def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
+def compare(name, disease, data_type, country, sex, year, consistent, iter, burn, thin):
     # METHODS
     # data only 
     do_model = load_new_model(disease, country, sex=sex)
@@ -290,7 +299,7 @@ def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
     p_model, p_pred, p_est, p_t, p_mare = gbd_prior(p_model, disease, data_type, country, sex, year, iter, burn, thin)
     # MVN
     mvn_model = load_new_model(disease, country, sex=sex)
-    mvn_model, mvn_pred, mvn_est, mvn_t, mvn_mare = mvn(mvn_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False)
+    mvn_model, mvn_pred, mvn_est, mvn_t, mvn_mare = mvn(mvn_model, disease, data_type, country, sex, year, iter, burn, thin, consistent=consistent, var_inflation=1, log_space=False)
     # MVN log space
     mvnlog_model = load_new_model(disease, country, sex=sex)
     try: 
