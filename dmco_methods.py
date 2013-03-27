@@ -346,13 +346,34 @@ def compare(name, disease, data_type, country, sex, year, iter, burn, thin):
             
     pl.savefig('/homes/peterhm/gbd/book/dmco-%s_%s_%s_%s_%s.png'%(name, disease, country, sex, year))
 
-def add_m_all(country):
+def open_mortality():
+    # load file
     try:
         import scikits.statsmodels.iolib as pd
         mortality = pandas.DataFrame(pd.genfromdta('/home/j/Project/Mortality/GBD Envelopes/04. Lifetables/02. MORTMatch/cluster/results/compiled/iso3_lt_mean_uncertainty.dta'))
     except:
         import scikits.statsmodels.lib.io as pd
         mortality = pandas.DataFrame(pd.genfromdta('/home/j/Project/Mortality/GBD\ Envelopes/04.\ Lifetables/02.\ MORTMatch/cluster/results/compiled/iso3_lt_mean_uncertainty.dta'))
-    mortality = mortality.filter(like='mx')
-    iso3, age, sex, year
+    # keep desired variables
+    mortality = mortality.ix[:,0:7]
+    mortality.columns = ['area', 'sex', 'year_start', 'age_start', 'lower_ci', 'upper_ci', 'value']
+    # add input data
+    # special case for ages
+    mortality['age_end'] = mortality['age_start']+5.
+    mortality.age_end[mortality.age_start == 0] = 1
+    mortality.age_end[mortality.age_start == 1] = 5
 
+    mortality['age_weights'] = pl.nan
+    mortality['data_type'] = 'm_all'
+    mortality['effective_sample_size'] = pl.nan
+    mortality['standard_error'] = pl.nan
+    mortality['year_end'] = mortality['year_start']
+    return mortality
+
+def add_data(model, mortality, country, year):
+    # select desired area and year
+    data = mortality[mortality.area == country]
+    data = data[data.year_start == year]
+
+    model.input_data = model.input_data.append(data, ignore_index=True)
+    
