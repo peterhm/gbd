@@ -358,11 +358,10 @@ def compare(name, disease, data_type, country, sex, year, consistent, iter, burn
 def open_mortality():
     # load file
     try:
-        import scikits.statsmodels.iolib as pd
-        mortality = pandas.DataFrame(pd.genfromdta('/home/j/Project/Mortality/GBD Envelopes/04. Lifetables/02. MORTMatch/cluster/results/compiled/iso3_lt_mean_uncertainty.dta'))
+        import scikits.statsmodels.iolib as pd        
     except:
         import scikits.statsmodels.lib.io as pd
-        mortality = pandas.DataFrame(pd.genfromdta('/home/j/Project/Mortality/GBD\ Envelopes/04.\ Lifetables/02.\ MORTMatch/cluster/results/compiled/iso3_lt_mean_uncertainty.dta'))
+    mortality = pandas.DataFrame(pd.genfromdta('/home/j/Project/Mortality/GBD Envelopes/04. Lifetables/02. MORTMatch/cluster/results/compiled/iso3_lt_mean_uncertainty.dta'))
     # keep desired variables
     mortality = mortality.ix[:,0:7]
     mortality.columns = ['area', 'sex', 'year_start', 'age_start', 'lower_ci', 'upper_ci', 'value']
