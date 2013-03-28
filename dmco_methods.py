@@ -98,53 +98,42 @@ def get_emp(disease, data_type, country, sex, year):
     
     return mu_rate
     
-def find_fnrfx(model, disease, data_param, country, sex, year):
-    '''add fixed and random effects from GBD as priors to new model
-    data_param : str
-      either 'consistent' or one of 'f', 'i', 'p', 'r', 'X' '''
+def find_fnrfx(model, disease, data_type, country, sex, year):
+    '''add fixed and random effects from GBD as priors to new model'''
     # create dummy model to get appropriate Model.vars fields
     dummy = load_new_model(disease, country, sex)
-    # create dummy model to get sigma_alpha priors
-    dm = dismod3.load_disease_model(disease)
-    if data_param == 'consistent': 
-        data_types = ['f', 'i', 'p', 'r', 'X']
-        dummy.vars += dismod3.ism.consistent(dummy)
-    else:
-        data_types = data_param
-        dummy.vars += dismod3.ism.age_specific_rate(dummy, data_param)
-    for data_type in data_types:
-        vars = dummy.vars[data_type]
+    dummy.vars += dismod3.ism.age_specific_rate(dummy, data_type)
+    vars = dummy.vars[data_type]
+    
+    # save random effects
+    emp_re = pandas.read_csv('/home/j/Project/dismod/output/dm-%s/posterior/re-%s-%s+%s+%s.csv'%(disease, data_type, geo_info(country,disease), sex, year), index_col=0)
+    for col in emp_re.index:
+        model.parameters[data_type]['random_effects'][col] = dict(dist='Constant', 
+                                                                  mu=emp_re.ix[col, 'mu_coeff'], 
+                                                                  sigma=emp_re.ix[col, 'sigma_coeff'])
         
-        # save random effects
+    # also save empirical prior on sigma_alpha, the dispersion of the random effects
+    dm = dismod3.load_disease_model(disease)
+    dm_na = dm.get_empirical_prior(full_name[data_type])['new_alpha']
+    for n in vars['sigma_alpha']:
         try:
-            emp_re = pandas.read_csv('/home/j/Project/dismod/output/dm-%s/posterior/re-%s-%s+%s+%s.csv'%(disease, data_type, geo_info(country,disease), sex, year), index_col=0)
-            for col in emp_re.index:
-                model.parameters[data_type]['random_effects'][col] = dict(dist='Constant', 
-                                                                          mu=emp_re.ix[col, 'mu_coeff'], 
-                                                                          sigma=emp_re.ix[col, 'sigma_coeff'])
+            model.parameters[data_type]['random_effects'][n.__name__] = dict(dist = dm_na[n.__name__]['dist'],
+                                                                             mu = dm_na[n.__name__]['mu'], 
+                                                                             sigma = dm_na[n.__name__]['sigma'], 
+                                                                             lower = dm_na[n.__name__]['lower'], 
+                                                                             upper = dm_na[n.__name__]['upper'])
         except:
-            pass
-        # also save empirical prior on sigma_alpha, the dispersion of the random effects
-        dm_na = dm.get_empirical_prior(full_name[data_type])['new_alpha']
-        for n in vars['sigma_alpha']:
-            try:
-                model.parameters[data_type]['random_effects'][n.__name__] = dict(dist = dm_na[n.__name__]['dist'],
-                                                                                 mu = dm_na[n.__name__]['mu'], 
-                                                                                 sigma = dm_na[n.__name__]['sigma'], 
-                                                                                 lower = dm_na[n.__name__]['lower'], 
-                                                                                 upper = dm_na[n.__name__]['upper'])
-            except:
-                model.parameters[data_type]['random_effects'][n.__name__] = dict(dist = 'TruncatedNormal',
-                                                                                 mu = .05,
-                                                                                 sigma = .03**-2, 
-                                                                                 lower = 0.01, 
-                                                                                 upper = 0.5)
-        # save fixed effects    
-        emp_fe = pandas.read_csv('/home/j/Project/dismod/output/dm-%s/posterior/fe-%s-%s+%s+%s.csv'%(disease, data_type, geo_info(country,disease), sex, year), index_col=0)
-        for n, col in zip(vars['beta'], vars['X'].columns):
-            model.parameters[data_type]['fixed_effects'][col] = dict(dist = 'Constant', 
-                                                                     mu = emp_fe.ix[col, 'mu_coeff'], 
-                                                                     sigma = emp_fe.ix[col, 'sigma_coeff'])    
+            model.parameters[data_type]['random_effects'][n.__name__] = dict(dist = 'TruncatedNormal',
+                                                                             mu = .05,
+                                                                             sigma = .03**-2, 
+                                                                             lower = 0.01, 
+                                                                             upper = 0.5)
+    # save fixed effects    
+    emp_fe = pandas.read_csv('/home/j/Project/dismod/output/dm-%s/posterior/fe-%s-%s+%s+%s.csv'%(disease, data_type, geo_info(country,disease), sex, year), index_col=0)
+    for n, col in zip(vars['beta'], vars['X'].columns):
+        model.parameters[data_type]['fixed_effects'][col] = dict(dist = 'Constant', 
+                                                                 mu = emp_fe.ix[col, 'mu_coeff'], 
+                                                                 sigma = emp_fe.ix[col, 'sigma_coeff'])    
 
 def mare(model, data_type):
     try:
