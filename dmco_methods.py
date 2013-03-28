@@ -368,8 +368,8 @@ def open_mortality():
     # add input data
     # special case for ages
     mortality['age_end'] = mortality['age_start']+5.
-    mortality.age_end[mortality.age_start == 0] = 1
-    mortality.age_end[mortality.age_start == 1] = 5
+    mortality['age_end'][mortality['age_start'] == 0] = 1
+    mortality['age_end'][mortality['age_start'] == 1] = 5
 
     mortality['age_weights'] = pl.nan
     mortality['data_type'] = 'm_all'
@@ -380,8 +380,8 @@ def open_mortality():
 
 def add_data(model, mortality, country, year):
     # select desired area and year
-    data = mortality[mortality.area == country]
-    data = data[data.year_start == year]
+    data = mortality[mortality['area'] == country]
+    data = data[data['year_start'] == year]
 
     model.input_data = model.input_data.append(data, ignore_index=True)
     
