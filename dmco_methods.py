@@ -94,7 +94,7 @@ def get_emp(disease, data_type, country, sex, year):
     emp = pandas.read_csv('/home/j/Project/dismod/output/dm-%s/posterior/dm-%s-%s-%s-%s-%s.csv'%(disease, disease, full_name[data_type], geo_info(country, disease), sex, year), index_col=None)
 
     # keep only estimates from country
-    mu_rate = emp[emp.Iso3 == country].filter(like='Draw')
+    mu_rate = emp[emp['Iso3'] == country].filter(like='Draw')
     
     return mu_rate
     
@@ -140,7 +140,7 @@ def mare(model, data_type):
         pred = model.vars[data_type]['p_pred'].trace().mean(0)
     except:
         pred = 0    
-    obs = model.get_data(data_type).value
+    obs = model.get_data(data_type)['value']
     mare = pl.median((abs(pred - obs)/obs)*100)
     return mare
 
@@ -253,7 +253,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     dm = load_new_model(disease, geo_info(country, disease), sexes)
     
     # create heterogeneity covariate and create prior
-    dm.input_data['z_age'] = .5 * (dm.input_data.age_start + dm.input_data.age_end)
+    dm.input_data['z_age'] = .5 * (dm.input_data['age_start'] + dm.input_data['age_end'])
     dm.vars += dismod3.ism.age_specific_rate(dm, data_type, geo_info(country,disease), sex, year, mu_age_parent=None, sigma_age_parent=None)
     start = clock()
     dismod3.fit.fit_asr(dm, data_type, iter=iter, thin=thin, burn=burn)
