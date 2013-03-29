@@ -184,7 +184,8 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
         data_types = ['f', 'i', 'p', 'r', 'X']
     else:
         data_types = data_param
-
+    
+    priors = {}
     for data_type in data_types:
         # get prior for each data_type
         gbd_est = get_emp(disease, data_type, country, sex, year)
@@ -196,7 +197,8 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
             mu_rate = pl.array(gbd_est)
             mu_rate_mean = pl.array(gbd_est).mean(1)
             covar = pl.cov(pl.array(gbd_est))
-            
+        priors[data_type] = gbd_est
+        
         find_fnrfx(model, disease, data_type, country, sex, year)
         if data_param == 'consistent':
             model.vars += dismod3.ism.consistent(model, country, sex, year)
@@ -226,9 +228,7 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
         
     time = clock() - start
     
-    pred = dismod3.covariates.predict_for(model, model.parameters[data_type], country, sex, year, country, sex, year, True, model.vars[data_type], 0, 1).T
-    
-    return model, pred, gbd_est, time, mare(model, data_type)    
+    return model, priors, time, mare(model, data_type)    
 
 def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1):
     '''discrete'''
@@ -304,16 +304,16 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
 def compare(name, disease, data_type, country, sex, year, consistent, iter, burn, thin):
     # METHODS
     # data only 
-    do_model = load_new_model(disease, country, sex=sex)
+    do_model = load_new_model(disease, country, sex=sex, cov='average')
     do_model, do_pred, do_t, do_mare = data_only(do_model, disease, data_type, country, sex, year, iter, burn, thin)
     # GBD prior 
-    p_model = load_new_model(disease, country, sex=sex)
+    p_model = load_new_model(disease, country, sex=sex, cov='average')
     p_model, p_pred, p_est, p_t, p_mare = gbd_prior(p_model, disease, data_type, country, sex, year, iter, burn, thin)
     # MVN
-    mvn_model = load_new_model(disease, country, sex=sex)
-    mvn_model, mvn_pred, mvn_est, mvn_t, mvn_mare = mvn(mvn_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False)
+    mvn_model = load_new_model(disease, country, sex=sex, cov='average')
+    mvn_model, mvn_est, mvn_t, mvn_mare = mvn(mvn_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False)
     # MVN log space
-    mvnlog_model = load_new_model(disease, country, sex=sex)
+    mvnlog_model = load_new_model(disease, country, sex=sex, cov='average')
     try: 
         mvnlog_model, mvnlog_pred, mvnlog_est, mvnlog_t, mvnlog_mare = mvn(mvnlog_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=True)
     except ValueError:
@@ -322,13 +322,13 @@ def compare(name, disease, data_type, country, sex, year, consistent, iter, burn
         mvnlog_t = pl.inf
         mvnlog_mare = pl.inf
     # Heterogeneity
-    mvnhi_model = load_new_model(disease, country, sex=sex)
+    mvnhi_model = load_new_model(disease, country, sex=sex, cov='average')
     mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
     
     # PLOTTING
     plotting = [{'model':do_model, 'pred':do_pred, 'prior':pl.zeros((101,2)), 'time':do_t, 'mare':do_mare, 'name':'Data only'},
                 {'model':p_model, 'pred':p_pred, 'prior':p_est, 'time':p_t, 'mare':p_mare, 'name':'GBD prior'},
-                {'model':mvn_model, 'pred':mvn_pred, 'prior':mvn_est, 'time':mvn_t, 'mare':mvn_mare, 'name':'MVN'},
+                {'model':mvn_model, 'pred':dismod3.covariates.predict_for(mvn_model, mvn_model.parameters[data_type], country, sex, year, country, sex, year, True, mvn_model.vars[data_type], 0, 1).T, 'prior':mvn_est, 'time':mvn_t, 'mare':mvn_mare, 'name':'MVN'},
                 {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':mvnlog_est, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'},
                 {'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':mvnhi_est, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'GNB MVN'}]
 
