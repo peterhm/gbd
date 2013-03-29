@@ -117,9 +117,9 @@ def find_fnrfx(model, disease, data_type, country, sex, year):
         
     # also save empirical prior on sigma_alpha, the dispersion of the random effects
     dm = dismod3.load_disease_model(disease)
-    dm_na = dm.get_empirical_prior(full_name[data_type])['new_alpha']
     for n in vars['sigma_alpha']:
         try:
+            dm_na = dm.get_empirical_prior(full_name[data_type])['new_alpha']
             model.parameters[data_type]['random_effects'][n.__name__] = dict(dist = dm_na[n.__name__]['dist'],
                                                                              mu = dm_na[n.__name__]['mu'], 
                                                                              sigma = dm_na[n.__name__]['sigma'], 
@@ -202,8 +202,11 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
             model.vars += dismod3.ism.consistent(model, country, sex, year)
         else:
             model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
-        for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
-            gamma_k.value = mu_rate_mean[a_k]
+        try:
+            for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
+                gamma_k.value = mu_rate_mean[a_k]
+        except:
+            pass
             
         if log_space == True:
             @mc.potential
