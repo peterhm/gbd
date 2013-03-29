@@ -203,7 +203,7 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
         else:
             model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
         for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
-            gamma_k['value'] = mu_rate_mean[a_k]
+            gamma_k.value = mu_rate_mean[a_k]
             
         if log_space == True:
             @mc.potential
