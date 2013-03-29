@@ -106,11 +106,14 @@ def find_fnrfx(model, disease, data_type, country, sex, year):
     vars = dummy.vars[data_type]
     
     # save random effects
-    emp_re = pandas.read_csv('/home/j/Project/dismod/output/dm-%s/posterior/re-%s-%s+%s+%s.csv'%(disease, data_type, geo_info(country,disease), sex, year), index_col=0)
-    for col in emp_re.index:
-        model.parameters[data_type]['random_effects'][col] = dict(dist='Constant', 
-                                                                  mu=emp_re.ix[col, 'mu_coeff'], 
-                                                                  sigma=emp_re.ix[col, 'sigma_coeff'])
+    try:
+        emp_re = pandas.read_csv('/home/j/Project/dismod/output/dm-%s/posterior/re-%s-%s+%s+%s.csv'%(disease, data_type, geo_info(country,disease), sex, year), index_col=0)
+        for col in emp_re.index:
+            model.parameters[data_type]['random_effects'][col] = dict(dist='Constant', 
+                                                                      mu=emp_re.ix[col, 'mu_coeff'], 
+                                                                      sigma=emp_re.ix[col, 'sigma_coeff'])
+    except:
+        pass
         
     # also save empirical prior on sigma_alpha, the dispersion of the random effects
     dm = dismod3.load_disease_model(disease)
@@ -173,44 +176,50 @@ def gbd_prior(model, disease, data_type, country, sex, year, iter, burn, thin, v
     
     return model, pred, gbd_est, time, mare(model, data_type)    
 
-def mvn(model, disease, data_type, country, sex, year, iter, burn, thin, consistent=False, var_inflation=1, log_space=False):
+def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False):
     '''multivariate normal (variance inflation optional)
     consistent : str, 'asr' (single rate type model) or 'ism' (compartmental modeling)
     '''
-    # get prior
-    gbd_est = get_emp(disease, data_type, country, sex, year)
-    if log_space == True:
-        mu_rate = pl.log(pl.array(gbd_est))
-        mu_rate_mean = pl.log(pl.array(gbd_est)).mean(1)
-        covar = pl.cov(pl.log(pl.array(gbd_est)))
+    if data_param == 'consistent':
+        data_types = ['f', 'i', 'p', 'r', 'X']
     else:
-        mu_rate = pl.array(gbd_est)
-        mu_rate_mean = pl.array(gbd_est).mean(1)
-        covar = pl.cov(pl.array(gbd_est))
-        
-    find_fnrfx(model, disease, data_type, country, sex, year)
-    if consistent == False:
-        model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
-    else:
-        model.vars += dismod3.ism.consistent(model, country, sex, year)
-    for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
-        gamma_k.value = mu_rate_mean[a_k]
-        
-    if log_space == True:
-        @mc.potential
-        def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
-            return mc.mv_normal_cov_like(pl.log(mu_child), mu, C+.01*pl.eye(101))
-    else:
-        @mc.potential
-        def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
-            return mc.mv_normal_cov_like(mu_child, mu, C+.01*pl.eye(101))
+        data_types = data_param
 
-    model.vars[data_type]['parent_similarity'] = parent_similarity
+    for data_type in data_types:
+        # get prior for each data_type
+        gbd_est = get_emp(disease, data_type, country, sex, year)
+        if log_space == True:
+            mu_rate = pl.log(pl.array(gbd_est))
+            mu_rate_mean = pl.log(pl.array(gbd_est)).mean(1)
+            covar = pl.cov(pl.log(pl.array(gbd_est)))
+        else:
+            mu_rate = pl.array(gbd_est)
+            mu_rate_mean = pl.array(gbd_est).mean(1)
+            covar = pl.cov(pl.array(gbd_est))
+            
+        find_fnrfx(model, disease, data_type, country, sex, year)
+        if data_param == 'consistent':
+            model.vars += dismod3.ism.consistent(model, country, sex, year)
+        else:
+            model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
+        for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
+            gamma_k['value'] = mu_rate_mean[a_k]
+            
+        if log_space == True:
+            @mc.potential
+            def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
+                return mc.mv_normal_cov_like(pl.log(mu_child), mu, C+.01*pl.eye(101))
+        else:
+            @mc.potential
+            def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
+                return mc.mv_normal_cov_like(mu_child, mu, C+.01*pl.eye(101))
+        model.vars[data_type]['parent_similarity'] = parent_similarity
+    
     start = clock()
-    if consistent == False:
-        dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
-    else:
+    if data_param == 'consistent':
         dismod3.fit.fit_consistent(model, iter=iter, thin=thin, burn=burn)
+    else:
+        dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
         
     time = clock() - start
     
@@ -299,7 +308,7 @@ def compare(name, disease, data_type, country, sex, year, consistent, iter, burn
     p_model, p_pred, p_est, p_t, p_mare = gbd_prior(p_model, disease, data_type, country, sex, year, iter, burn, thin)
     # MVN
     mvn_model = load_new_model(disease, country, sex=sex)
-    mvn_model, mvn_pred, mvn_est, mvn_t, mvn_mare = mvn(mvn_model, disease, data_type, country, sex, year, iter, burn, thin, consistent=consistent, var_inflation=1, log_space=False)
+    mvn_model, mvn_pred, mvn_est, mvn_t, mvn_mare = mvn(mvn_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False)
     # MVN log space
     mvnlog_model = load_new_model(disease, country, sex=sex)
     try: 
