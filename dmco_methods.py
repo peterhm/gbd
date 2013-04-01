@@ -268,7 +268,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     # load regional model
     if sex != 'total': sexes=[sex, 'total']
     else: sexes = sex
-    dm = load_new_model(disease, geo_info(country, disease), sexes)
+    dm = load_new_model(disease, geo_info(country, disease), sexes, cov='average')
     
     # create heterogeneity covariate and create prior
     dm.input_data['z_age'] = .5 * (dm.input_data['age_start'] + dm.input_data['age_end'])
