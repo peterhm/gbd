@@ -321,7 +321,7 @@ def compare(name, disease, data_type, country, sex, year, consistent, iter, burn
     # MVN log space
     mvnlog_model = load_new_model(disease, country, sex=sex, cov='average')
     try: 
-        mvnlog_model, mvnlog_pred, mvnlog_est, mvnlog_t, mvnlog_mare = mvn(mvnlog_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=True, cov='average')
+        mvnlog_model, mvnlog_pred, mvnlog_est, mvnlog_t, mvnlog_mare = mvn(mvnlog_model, disease, data_type, country, sex, year, iter, burn, thin, var_inflation=1, log_space=True)
     except ValueError:
         mvnlog_pred = pl.zeros((101,2))
         mvnlog_est = pl.zeros((101,2))
