@@ -216,7 +216,7 @@ def store_effect_coefficients(dm, vars, param_type):
 
     index = []
     for level in ['Country_level', 'Study_level']:
-        for cv in sorted(dm.params['covariates'][level]):
+        for cv in sorted(dm.params.get('covariates', {}).get(level, [])):
             if dm.params['covariates'][level][cv]['rate']['value']:
 
                 # do some fiddly work to get the list of covariates in the correct order
