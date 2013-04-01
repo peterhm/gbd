@@ -185,6 +185,7 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
     else:
         data_types = data_param
     
+    # set priors
     priors = {}
     for data_type in data_types:
         # get prior for each data_type
@@ -200,16 +201,21 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
         priors[data_type] = gbd_est
         
         find_fnrfx(model, disease, data_type, country, sex, year)
-        if data_param == 'consistent':
-            model.vars += dismod3.ism.consistent(model, country, sex, year)
-        else:
-            model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
+    
+    # add vars
+    if data_param == 'consistent':
+        model.vars += dismod3.ism.consistent(model, country, sex, year)
+    else:
+        model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
+
+    # add gamma priors and mc.potential
+    for data_type in data_types:
         try:
             for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
                 gamma_k.value = mu_rate_mean[a_k]
-        except:
+        except KeyError:
             pass
-            
+                
         if log_space == True:
             @mc.potential
             def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
