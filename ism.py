@@ -262,7 +262,7 @@ def age_specific_rate(model, data_type, reference_area='all', reference_sex='tot
     result[data_type] = vars
     return result
     
-def consistent(model, reference_area='all', reference_sex='total', reference_year='all', priors={}, zero_re=True):
+def consistent(model, reference_area='all', reference_sex='total', reference_year='all', priors={}, zero_re=True, rate_type='neg_binom'):
     """ Generate PyMC objects for consistent model of epidemological data
     
     :Parameters:
@@ -271,7 +271,8 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
       - `root_area, root_sex, root_year` : the node of the model to fit consistently
       - `priors` : dictionary, with keys for data types for lists of priors on age patterns
       - `zero_re` : boolean, change one stoch from each set of siblings in area hierarchy to a 'sum to zero' deterministic
- 
+      - `rate_type` : str, optional. One of 'beta_binom', 'binom', 'log_normal_model', 'neg_binom', 'neg_binom_lower_bound_model', 'neg_binom_model', 'normal_model', 'offest_log_normal', or 'poisson'
+
     :Results:
       - Returns dict of dicts of PyMC objects, including 'i', 'p', 'r', 'f', the covariate adjusted predicted values for each row of data
     
@@ -293,7 +294,7 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
     for t in 'irf':
         rate[t] = age_specific_rate(model, t, reference_area, reference_sex, reference_year,
                                     mu_age=None, mu_age_parent=priors.get((t, 'mu')), sigma_age_parent=priors.get((t, 'sigma')),
-                                    zero_re=zero_re)[t] # age_specific_rate()[t] is to create proper nesting of dict
+                                    zero_re=zero_re, rate_type=rate_type)[t] # age_specific_rate()[t] is to create proper nesting of dict
 
         # set initial values from data
         if t in priors:
