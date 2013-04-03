@@ -402,4 +402,55 @@ def add_data(model, mortality, country, year):
     data = data[data['year_start'] == year]
 
     model.input_data = model.input_data.append(data, ignore_index=True)
+
+def dmco_save_posterior(dm, model, vars, country, sex, year, rate_type_list):
+    """ Save country level posterior in a csv file, and put the file in the 
+    directory job_working_directory/posterior/country_level_posterior_dm-'id'
+    """
+    # job working directory
+    job_wd = dismod3.settings.JOB_WORKING_DIR % dm.id
+
+    # directory to save the file
+    dir = job_wd + '/posterior/'
+
+    # create posteriors for rate types
+    for rate_type in rate_type_list:
+        try:
+            # make an output file
+            filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(dm.id), rate_type, country, sex, year)
+            print('writing csv file %s' % (dir + filename))
+
+            # set prior bounds
+            t = {'incidence': 'i', 'prevalence': 'p', 'remission': 'r', 'excess-mortality': 'f',
+                 'prevalence_x_excess-mortality': 'pf', 'duration': 'X'}[rate_type]
+            if t in vars:
+                if t in model.parameters and 'level_bounds' in model.parameters[t]:
+                    lower=model.parameters[t]['level_bounds']['lower']
+                    upper=model.parameters[t]['level_bounds']['upper']
+                else:
+                    lower=0
+                    upper=pl.inf
+
+                posterior = covariate_model.predict_for(model,
+                                                        model.parameters[t],
+                                                        country, sex, year,
+                                                        a, sex, year,
+                                                        True,  # population weighted averages
+                                                        vars[t],
+                                                        lower, upper).T
+
+                # create file
+                file = pandas.DataFrame(posterior, columns=['Draw%d'%i for i in range(1000)])
+                file['Iso3'] = country
+                file['Population'] = dismod3.neg_binom_model.population_by_age[(country, str(year), sex)]
+                file['Rate type'] = rate_type
+                file['Age'] = model.parameters['ages']
+                
+                # save file
+                file.to_csv(filename)
+
+        except IOError, e:
+            print 'WARNING: could not save country level output for %s' % rate_type
+            print e
+
     
