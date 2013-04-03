@@ -403,7 +403,7 @@ def add_data(model, mortality, country, year):
 
     model.input_data = model.input_data.append(data, ignore_index=True)
 
-def dmco_save_posterior(dm, model, vars, country, sex, year, rate_type_list):
+def save_posterior(dm, model, country, sex, year, rate_type_list):
     """ Save country level posterior in a csv file, and put the file in the 
     directory job_working_directory/posterior/country_level_posterior_dm-'id'
     """
@@ -423,7 +423,7 @@ def dmco_save_posterior(dm, model, vars, country, sex, year, rate_type_list):
             # set prior bounds
             t = {'incidence': 'i', 'prevalence': 'p', 'remission': 'r', 'excess-mortality': 'f',
                  'prevalence_x_excess-mortality': 'pf', 'duration': 'X'}[rate_type]
-            if t in vars:
+            if t in model.vars:
                 if t in model.parameters and 'level_bounds' in model.parameters[t]:
                     lower=model.parameters[t]['level_bounds']['lower']
                     upper=model.parameters[t]['level_bounds']['upper']
@@ -436,7 +436,7 @@ def dmco_save_posterior(dm, model, vars, country, sex, year, rate_type_list):
                                                         country, sex, year,
                                                         a, sex, year,
                                                         True,  # population weighted averages
-                                                        vars[t],
+                                                        model.vars[t],
                                                         lower, upper).T
 
                 # create file
