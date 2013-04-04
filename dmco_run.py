@@ -32,9 +32,9 @@ thin=2
 mortality = dmco.open_mortality()
 
 # load country model and add country-specific mortality estimates
-model = load_new_model(data_num, country, sex=sex, cov='average')
+model = dmco.load_new_model(data_num, country, sex=sex, cov='average')
 dmco.add_data(model, mortality, country, year)
-model, model_priors, model_t, model_mare = mvn(model, prior_num, 'consistent', country, sex, year, iter, burn, thin)
+model, model_priors, model_t, model_mare = dmco.mvn(model, prior_num, 'consistent', country, sex, year, iter, burn, thin)
 
 # generate estimates
 dmco.save_country_posterior(dismod3.load_disease_model(data_num), model, country, sex, year, 
