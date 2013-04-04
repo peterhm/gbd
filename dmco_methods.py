@@ -455,7 +455,7 @@ def save_posterior(dm, model, country, sex, year, rate_type_list):
                 file['Age'] = model.parameters['ages']
                 
                 # save file
-                file.to_csv(filename)
+                file.to_csv(dir+filename, index=False)
 
         except IOError, e:
             print 'WARNING: could not save country level output for %s' % rate_type
