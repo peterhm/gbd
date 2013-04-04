@@ -1,4 +1,5 @@
 import dismod3
+import covariate_model
 import json
 import pandas 
 import pymc as mc
@@ -434,13 +435,20 @@ def save_posterior(dm, model, country, sex, year, rate_type_list):
                 posterior = covariate_model.predict_for(model,
                                                         model.parameters[t],
                                                         country, sex, year,
-                                                        a, sex, year,
+                                                        country, sex, year,
                                                         True,  # population weighted averages
                                                         model.vars[t],
                                                         lower, upper).T
 
+                # create correct number of draws
+                if posterior.shape[1] < 1000: 
+                    draws = posterior.shape[1]
+                    print 'Output file will have fewer than 1000 draws'
+                else: 
+                    draws = 1000
+                    posterior = posterior[:,0:draws] 
                 # create file
-                file = pandas.DataFrame(posterior, columns=['Draw%d'%i for i in range(1000)])
+                file = pandas.DataFrame(posterior, columns=['Draw%d'%i for i in range(draws)])
                 file['Iso3'] = country
                 file['Population'] = dismod3.neg_binom_model.population_by_age[(country, str(year), sex)]
                 file['Rate type'] = rate_type
