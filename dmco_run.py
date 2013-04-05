@@ -16,6 +16,7 @@ reload(dmco)
 # model id number for data
 data_num = int(sys.argv[1])
 prior_num = int(sys.argv[2])
+year = in(sys.argv[3])
 
 # download data to j drive
 os.system('python download_model.py %s'%(data_num))
@@ -28,18 +29,21 @@ thin=2
 # burn=10000
 # thin=10
 
-# load mortality estimates
+# load mortality estimates and country list
 mortality = dmco.open_mortality()
+country_list = pandas.read_csv('/snfs1/DATA/IHME_COUNTRY_CODES/IHME_COUNTRYCODES.CSV', index_col=None)
+country_list = country_list[country_list.ix[:,'ihme_indic_country'] == 1]
+country_list = list(pl.unique(country_list['iso3']))
 
-country = 'USA'
-sex='male'
-# load country model and add country-specific mortality estimates
-model = dmco.load_new_model(data_num, country, sex, cov='average')
-dmco.add_data(model, mortality, country, year)
-model, model_priors, model_t, model_mare = dmco.mvn(model, prior_num, 'consistent', country, sex, year, iter, burn, thin)
+for country in country_list:
+    for sex in ['male', 'female']:
+        # load country model and add country-specific mortality estimates
+        model = dmco.load_new_model(data_num, country, sex, cov='average')
+        dmco.add_data(model, mortality, country, year)
+        model, model_priors, model_t, model_mare = dmco.mvn(model, prior_num, 'consistent', country, sex, year, iter, burn, thin)
 
-# generate estimates
-dmco.save_country_posterior(dismod3.load_disease_model(data_num), model, country, sex, year, 
-                            ['incidence', 'prevalence', 'remission', 'excess-mortality', 'duration', 'prevalence_x_excess-mortality'])
+        # generate estimates
+        dmco.save_posterior(dismod3.load_disease_model(data_num), model, country, sex, year, 
+                                    ['incidence', 'prevalence', 'remission', 'excess-mortality', 'duration', 'prevalence_x_excess-mortality'])
 
 
