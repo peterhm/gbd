@@ -1,4 +1,5 @@
 import dismod3
+import covariate_model
 import json
 import pandas 
 import pymc as mc
@@ -185,6 +186,7 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
     else:
         data_types = data_param
     
+    # set priors
     priors = {}
     for data_type in data_types:
         # get prior for each data_type
@@ -192,24 +194,29 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
         if log_space == True:
             mu_rate = pl.log(pl.array(gbd_est))
             mu_rate_mean = pl.log(pl.array(gbd_est)).mean(1)
-            covar = pl.cov(pl.log(pl.array(gbd_est)))
+            covar = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_mean for _ in range(1000)]).T)
         else:
             mu_rate = pl.array(gbd_est)
             mu_rate_mean = pl.array(gbd_est).mean(1)
-            covar = pl.cov(pl.array(gbd_est))
+            covar = pl.cov(pl.array(gbd_est)-pl.array([mu_rate_mean for _ in range(1000)]).T)
         priors[data_type] = gbd_est
         
         find_fnrfx(model, disease, data_type, country, sex, year)
-        if data_param == 'consistent':
-            model.vars += dismod3.ism.consistent(model, country, sex, year)
-        else:
-            model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
+    
+    # add vars
+    if data_param == 'consistent':
+        model.vars += dismod3.ism.consistent(model, country, sex, year)
+    else:
+        model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
+
+    # add gamma priors and mc.potential
+    for data_type in data_types:
         try:
             for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
                 gamma_k.value = mu_rate_mean[a_k]
-        except:
+        except KeyError:
             pass
-            
+                
         if log_space == True:
             @mc.potential
             def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
@@ -236,7 +243,7 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     gbd_est = get_emp(disease, data_type, country, sex, year)
     mu_rate_log = pl.log(pl.array(gbd_est))
     mu_rate_log_mean = pl.log(pl.array(gbd_est)).mean(1)
-    cov_log = pl.cov(pl.log(pl.array(gbd_est)))
+    cov_log = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_log_mean for _ in range(1000)]).T)
 
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -245,7 +252,7 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     
     @mc.potential
     def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_log, C=cov_log*var_inflation):
-        i = int(rand()*1000)
+        i = int(pl.rand()*1000)
         return mc.mv_normal_cov_like(pl.log(mu_child)[::10], mu[::10,i], C[::10,::10]+.001*pl.eye(11))
 
     model.vars[data_type]['parent_similarity'] = parent_similarity
@@ -262,7 +269,7 @@ def mvn_inflation(model, disease, data_type, country, sex, year, iter, burn, thi
     # load regional model
     if sex != 'total': sexes=[sex, 'total']
     else: sexes = sex
-    dm = load_new_model(disease, geo_info(country, disease), sexes)
+    dm = load_new_model(disease, geo_info(country, disease), sexes, cov='average')
     
     # create heterogeneity covariate and create prior
     dm.input_data['z_age'] = .5 * (dm.input_data['age_start'] + dm.input_data['age_end'])
@@ -326,16 +333,16 @@ def compare(name, disease, data_type, country, sex, year, consistent, iter, burn
     mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
     
     # PLOTTING
-    plotting = [{'model':do_model, 'pred':do_pred, 'prior':pl.zeros((101,2)), 'time':do_t, 'mare':do_mare, 'name':'Data only'},
-                {'model':p_model, 'pred':p_pred, 'prior':p_est, 'time':p_t, 'mare':p_mare, 'name':'GBD prior'},
+    plotting = [{'model':do_model, 'pred':do_pred, 'prior':{data_type:pl.zeros((101,2))}, 'time':do_t, 'mare':do_mare, 'name':'Data only'},
+                {'model':p_model, 'pred':p_pred, 'prior':{data_type:p_est}, 'time':p_t, 'mare':p_mare, 'name':'GBD prior'},
                 {'model':mvn_model, 'pred':dismod3.covariates.predict_for(mvn_model, mvn_model.parameters[data_type], country, sex, year, country, sex, year, True, mvn_model.vars[data_type], 0, 1).T, 'prior':mvn_est, 'time':mvn_t, 'mare':mvn_mare, 'name':'MVN'},
-                {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':mvnlog_est, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'},
-                {'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':mvnhi_est, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'GNB MVN'}]
+                {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':{data_type:mvnlog_est}, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'},
+                {'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':{data_type:mvnhi_est}, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'GNB MVN'}]
 
     # determine ymax from sim
     ymax = 0.
     for p in range(len(plotting)):
-        if max(plotting[p]['prior'].mean(1)) > ymax: ymax = max(plotting[p]['prior'].mean(1))
+        if max(plotting[p]['prior'][data_type].mean(1)) > ymax: ymax = max(plotting[p]['prior'][data_type].mean(1))
         elif max(plotting[p]['pred'].mean(1)) > ymax: ymax = max(plotting[p]['pred'].mean(1))
     ymax = ymax*1.05
     
@@ -346,8 +353,8 @@ def compare(name, disease, data_type, country, sex, year, consistent, iter, burn
         model = plotting[p]['model']
         dismod3.graphics.plot_data_bars(model.get_data(data_type))
         
-        pl.errorbar(pl.arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
-        pl.plot(plotting[p]['prior'].mean(1), 'k', linewidth=2, label='Prior')
+        pl.errorbar(pl.arange(101), pl.array(plotting[p]['prior'][data_type].mean(1)), 1.96*pl.array(plotting[p]['prior'][data_type].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
+        pl.plot(pl.array(plotting[p]['prior'][data_type].mean(1)), 'k', linewidth=2, label='Prior')
         pl.plot(plotting[p]['pred'].mean(1), 'r', linewidth=2, label=plotting[p]['name'])
         ui = mc.utils.hpd(plotting[p]['pred'].T, .05)
         pl.plot(ui[:,0], 'r--', linewidth=1)
@@ -396,4 +403,62 @@ def add_data(model, mortality, country, year):
     data = data[data['year_start'] == year]
 
     model.input_data = model.input_data.append(data, ignore_index=True)
+
+def save_posterior(dm, model, country, sex, year, rate_type_list):
+    """ Save country level posterior in a csv file, and put the file in the 
+    directory job_working_directory/posterior/country_level_posterior_dm-'id'
+    """
+    # job working directory
+    job_wd = dismod3.settings.JOB_WORKING_DIR % dm.id
+
+    # directory to save the file
+    dir = job_wd + '/posterior/'
+
+    # create posteriors for rate types
+    for rate_type in rate_type_list:
+        try:
+            # make an output file
+            filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(dm.id), rate_type, country, sex, year)
+            print('writing csv file %s' % (dir + filename))
+
+            # set prior bounds
+            t = {'incidence': 'i', 'prevalence': 'p', 'remission': 'r', 'excess-mortality': 'f',
+                 'prevalence_x_excess-mortality': 'pf', 'duration': 'X'}[rate_type]
+            if t in model.vars:
+                if t in model.parameters and 'level_bounds' in model.parameters[t]:
+                    lower=model.parameters[t]['level_bounds']['lower']
+                    upper=model.parameters[t]['level_bounds']['upper']
+                else:
+                    lower=0
+                    upper=pl.inf
+
+                posterior = covariate_model.predict_for(model,
+                                                        model.parameters[t],
+                                                        country, sex, year,
+                                                        country, sex, year,
+                                                        True,  # population weighted averages
+                                                        model.vars[t],
+                                                        lower, upper).T
+
+                # create correct number of draws
+                if posterior.shape[1] < 1000: 
+                    draws = posterior.shape[1]
+                    print 'Output file will have fewer than 1000 draws'
+                else: 
+                    draws = 1000
+                    posterior = posterior[:,0:draws] 
+                # create file
+                file = pandas.DataFrame(posterior, columns=['Draw%d'%i for i in range(draws)])
+                file['Iso3'] = country
+                file['Population'] = dismod3.neg_binom_model.population_by_age[(country, str(year), sex)]
+                file['Rate type'] = rate_type
+                file['Age'] = model.parameters['ages']
+                
+                # save file
+                file.to_csv(dir+filename, index=False)
+
+        except IOError, e:
+            print 'WARNING: could not save country level output for %s' % rate_type
+            print e
+
     
