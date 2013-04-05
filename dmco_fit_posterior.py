@@ -17,6 +17,8 @@ reload(dmco)
 data_num = int(sys.argv[1])
 prior_num = int(sys.argv[2])
 year = int(sys.argv[3])
+country = str(sys.argv[4])
+sex = str(sys.argv[5])
 
 # run settings
 iter=500
