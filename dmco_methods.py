@@ -401,6 +401,18 @@ def add_data(model, mortality, country, year):
     # select desired area and year
     data = mortality[mortality['area'] == country]
     data = data[data['year_start'] == year]
+    
+    # add input data
+    # special case for ages
+    data['age_end'] = data['age_start']+5.
+    data['age_end'][data['age_start'] == 0] = 1
+    data['age_end'][data['age_start'] == 1] = 5
+
+    data['age_weights'] = pl.nan
+    data['data_type'] = 'm_all'
+    data['effective_sample_size'] = pl.nan
+    data['standard_error'] = pl.nan
+    data['year_end'] = data['year_start']
 
     model.input_data = model.input_data.append(data, ignore_index=True)
 
