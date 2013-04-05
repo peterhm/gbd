@@ -16,7 +16,7 @@ reload(dmco)
 # model id number for data
 data_num = int(sys.argv[1])
 prior_num = int(sys.argv[2])
-year = in(sys.argv[3])
+year = int(sys.argv[3])
 
 # download data to j drive
 os.system('python download_model.py %s'%(data_num))
@@ -30,7 +30,7 @@ thin=2
 # thin=10
 
 # load mortality estimates and country list
-mortality = dmco.open_mortality()
+mortality = pandas.read_csv('/homes/peterhm/gbd/dmco_mortality.csv')
 country_list = pandas.read_csv('/snfs1/DATA/IHME_COUNTRY_CODES/IHME_COUNTRYCODES.CSV', index_col=None)
 country_list = country_list[country_list.ix[:,'ihme_indic_country'] == 1]
 country_list = list(pl.unique(country_list['iso3']))
