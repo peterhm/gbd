@@ -194,11 +194,11 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
         if log_space == True:
             mu_rate = pl.log(pl.array(gbd_est))
             mu_rate_mean = pl.log(pl.array(gbd_est)).mean(1)
-            covar = pl.cov(pl.log(pl.array(gbd_est)))
+            covar = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_mean for _ in range(1000)]).T)
         else:
             mu_rate = pl.array(gbd_est)
             mu_rate_mean = pl.array(gbd_est).mean(1)
-            covar = pl.cov(pl.array(gbd_est))
+            covar = pl.cov(pl.array(gbd_est)-pl.array([mu_rate_mean for _ in range(1000)]).T)
         priors[data_type] = gbd_est
         
         find_fnrfx(model, disease, data_type, country, sex, year)
@@ -243,7 +243,7 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     gbd_est = get_emp(disease, data_type, country, sex, year)
     mu_rate_log = pl.log(pl.array(gbd_est))
     mu_rate_log_mean = pl.log(pl.array(gbd_est)).mean(1)
-    cov_log = pl.cov(pl.log(pl.array(gbd_est)))
+    cov_log = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_log_mean for _ in range(1000)]).T)
 
     find_fnrfx(model, disease, data_type, country, sex, year)
     model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
@@ -252,7 +252,7 @@ def discrete(model, disease, data_type, country, sex, year, iter, burn, thin, va
     
     @mc.potential
     def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_log, C=cov_log*var_inflation):
-        i = int(rand()*1000)
+        i = int(pl.rand()*1000)
         return mc.mv_normal_cov_like(pl.log(mu_child)[::10], mu[::10,i], C[::10,::10]+.001*pl.eye(11))
 
     model.vars[data_type]['parent_similarity'] = parent_similarity
