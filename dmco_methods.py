@@ -333,16 +333,16 @@ def compare(name, disease, data_type, country, sex, year, consistent, iter, burn
     mvnhi_model, mvnhi_pred, mvnhi_est, mvnhi_t, mvnhi_mare = mvn_inflation(mvnhi_model, disease, data_type, country, sex, year, iter, burn, thin, log_space=False)
     
     # PLOTTING
-    plotting = [{'model':do_model, 'pred':do_pred, 'prior':pl.zeros((101,2)), 'time':do_t, 'mare':do_mare, 'name':'Data only'},
-                {'model':p_model, 'pred':p_pred, 'prior':p_est, 'time':p_t, 'mare':p_mare, 'name':'GBD prior'},
+    plotting = [{'model':do_model, 'pred':do_pred, 'prior':{data_type:pl.zeros((101,2))}, 'time':do_t, 'mare':do_mare, 'name':'Data only'},
+                {'model':p_model, 'pred':p_pred, 'prior':{data_type:p_est}, 'time':p_t, 'mare':p_mare, 'name':'GBD prior'},
                 {'model':mvn_model, 'pred':dismod3.covariates.predict_for(mvn_model, mvn_model.parameters[data_type], country, sex, year, country, sex, year, True, mvn_model.vars[data_type], 0, 1).T, 'prior':mvn_est, 'time':mvn_t, 'mare':mvn_mare, 'name':'MVN'},
-                {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':mvnlog_est, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'},
-                {'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':mvnhi_est, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'GNB MVN'}]
+                {'model':mvnlog_model, 'pred':mvnlog_pred, 'prior':{data_type:mvnlog_est}, 'time':mvnlog_t, 'mare':mvnlog_mare, 'name':'MVN log space'},
+                {'model':mvnhi_model, 'pred':mvnhi_pred, 'prior':{data_type:mvnhi_est}, 'time':mvnhi_t, 'mare':mvnhi_mare, 'name':'GNB MVN'}]
 
     # determine ymax from sim
     ymax = 0.
     for p in range(len(plotting)):
-        if max(plotting[p]['prior'].mean(1)) > ymax: ymax = max(plotting[p]['prior'].mean(1))
+        if max(plotting[p]['prior'][data_type].mean(1)) > ymax: ymax = max(plotting[p]['prior'][data_type].mean(1))
         elif max(plotting[p]['pred'].mean(1)) > ymax: ymax = max(plotting[p]['pred'].mean(1))
     ymax = ymax*1.05
     
@@ -353,8 +353,8 @@ def compare(name, disease, data_type, country, sex, year, consistent, iter, burn
         model = plotting[p]['model']
         dismod3.graphics.plot_data_bars(model.get_data(data_type))
         
-        pl.errorbar(pl.arange(101), plotting[p]['prior'].mean(1), 1.96*pl.array(plotting[p]['prior'].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
-        pl.plot(plotting[p]['prior'].mean(1), 'k', linewidth=2, label='Prior')
+        pl.errorbar(pl.arange(101), pl.array(plotting[p]['prior'][data_type].mean(1)), 1.96*pl.array(plotting[p]['prior'][data_type].std(1)), color='k', capsize=0, elinewidth=.5, label='Prior error', alpha=.5)
+        pl.plot(pl.array(plotting[p]['prior'][data_type].mean(1)), 'k', linewidth=2, label='Prior')
         pl.plot(plotting[p]['pred'].mean(1), 'r', linewidth=2, label=plotting[p]['name'])
         ui = mc.utils.hpd(plotting[p]['pred'].T, .05)
         pl.plot(ui[:,0], 'r--', linewidth=1)
