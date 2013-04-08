@@ -4,7 +4,7 @@ import sys
 import os
 
 # download data to j drive
-os.system('python download_model.py %s'%(sys.argv[1]))
+os.system('/usr/local/epd-7.0-2/python download_model.py %s'%(sys.argv[1]))
 
 # load country list
 country_list = pandas.read_csv('/snfs1/DATA/IHME_COUNTRY_CODES/IHME_COUNTRYCODES.CSV', index_col=None)
