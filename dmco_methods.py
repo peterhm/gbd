@@ -1,5 +1,6 @@
 import dismod3
 import covariate_model
+import data as dm_data
 import json
 import pandas 
 import pymc as mc
@@ -86,7 +87,10 @@ def load_new_model(disease, country='all', sex=['total', 'male', 'female'], cov=
 
 def geo_info(country, disease):
     '''find country region from name'''
-    global_model = load_new_model(disease, 'all', ['total', 'male', 'female'])
+    global_model = dm_data.ModelData()
+    hierarchy = json.load(open('/home/j/Project/dismod/dismod_status/prod/dm-%s/hierarchy.json'%(disease)))
+    global_model.hierarchy.add_nodes_from(hierarchy['nodes'])
+    global_model.hierarchy.add_edges_from(hierarchy['edges'])
     region = global_model.hierarchy.in_edges(country)[0][0]
     return region
 
