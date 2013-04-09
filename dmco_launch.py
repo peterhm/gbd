@@ -12,7 +12,7 @@ country_list = country_list[country_list.ix[:,'ihme_indic_country'] == 1]
 country_list = list(pl.unique(country_list['iso3']))
 
 # launch on cluster
-for country in ['USA', 'GBR']:
+for country in country_list: #['USA', 'GBR']:
     for sex in ['male', 'female']:
         os.system('/usr/local/bin/SGE/bin/lx24-amd64/qsub -cwd /homes/peterhm/gbd/dmco_fit_posterior.sh %s %s %s %s %s' %(sys.argv[1], sys.argv[2], sys.argv[3], country, sex))
 

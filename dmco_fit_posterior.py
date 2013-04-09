@@ -21,12 +21,12 @@ country = str(sys.argv[4])
 sex = str(sys.argv[5])
 
 # run settings
-iter=500
-burn=1
-thin=2
-# iter=20000
-# burn=10000
-# thin=10
+# iter=500
+# burn=1
+# thin=2
+iter=20000
+burn=10000
+thin=10
 
 # load mortality estimates 
 mortality = pandas.read_csv('/homes/peterhm/gbd/dmco_mortality.csv')
