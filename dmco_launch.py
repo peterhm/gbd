@@ -10,6 +10,10 @@ os.system('/usr/local/epd-7.0-2/bin/python download_model.py %s'%(sys.argv[1]))
 country_list = pandas.read_csv('/snfs1/DATA/IHME_COUNTRY_CODES/IHME_COUNTRYCODES.CSV', index_col=None)
 country_list = country_list[country_list.ix[:,'ihme_indic_country'] == 1]
 country_list = list(pl.unique(country_list['iso3']))
+country_list.remove('BMU')
+country_list.remove('HKG')
+country_list.remove('MAC')
+country_list.remove('PRI')
 
 # launch on cluster
 for country in country_list: #['USA', 'GBR']:
