@@ -66,7 +66,7 @@ def load_new_model(disease, country='all', sex=['total', 'male', 'female'], cov=
     '''
     model = dismod3.data.load('/home/j/Project/dismod/output/dm-%s'%disease)
     # keep relative data
-    if len(sex) == 1: model.keep(areas=[country], sexes=[sex, 'total'])
+    if (type(sex)==str) & (sex != 'total'): model.keep(areas=[country], sexes=[sex, 'total'])
     else: model.keep(areas=[country], sexes=sex)
     
     if (True in pl.isnan(pl.array(model.output_template.filter(like='x_')))) | (True in pl.isnan(pl.array(model.input_data.filter(like='x_')))): 
