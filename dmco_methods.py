@@ -428,7 +428,7 @@ def save_posterior(dm, model, country, sex, year, rate_type_list):
     job_wd = dismod3.settings.JOB_WORKING_DIR % dm.id
 
     # directory to save the file
-    dir = job_wd + '/posterior/extra_i_knot/'
+    dir = job_wd + '/posterior/'
 
     # create posteriors for rate types
     for rate_type in rate_type_list:
