@@ -1,5 +1,6 @@
 import dismod3
 import covariate_model
+import data as dm_data
 import json
 import pandas 
 import pymc as mc
@@ -65,7 +66,7 @@ def load_new_model(disease, country='all', sex=['total', 'male', 'female'], cov=
     '''
     model = dismod3.data.load('/home/j/Project/dismod/output/dm-%s'%disease)
     # keep relative data
-    if len(sex) == 1: model.keep(areas=[country], sexes=[sex])
+    if (type(sex)==str) & (sex != 'total'): model.keep(areas=[country], sexes=[sex, 'total'])
     else: model.keep(areas=[country], sexes=sex)
     
     if (True in pl.isnan(pl.array(model.output_template.filter(like='x_')))) | (True in pl.isnan(pl.array(model.input_data.filter(like='x_')))): 
@@ -86,7 +87,10 @@ def load_new_model(disease, country='all', sex=['total', 'male', 'female'], cov=
 
 def geo_info(country, disease):
     '''find country region from name'''
-    global_model = load_new_model(disease, 'all', ['total', 'male', 'female'])
+    global_model = dm_data.ModelData()
+    hierarchy = json.load(open('/home/j/Project/dismod/dismod_status/prod/dm-%s/hierarchy.json'%(disease)))
+    global_model.hierarchy.add_nodes_from(hierarchy['nodes'])
+    global_model.hierarchy.add_edges_from(hierarchy['edges'])
     region = global_model.hierarchy.in_edges(country)[0][0]
     return region
 
@@ -401,6 +405,18 @@ def add_data(model, mortality, country, year):
     # select desired area and year
     data = mortality[mortality['area'] == country]
     data = data[data['year_start'] == year]
+    
+    # add input data
+    # special case for ages
+    data['age_end'] = data['age_start']+5.
+    data['age_end'][data['age_start'] == 0] = 1
+    data['age_end'][data['age_start'] == 1] = 5
+
+    data['age_weights'] = pl.nan
+    data['data_type'] = 'm_all'
+    data['effective_sample_size'] = pl.nan
+    data['standard_error'] = pl.nan
+    data['year_end'] = data['year_start']
 
     model.input_data = model.input_data.append(data, ignore_index=True)
 
