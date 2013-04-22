@@ -421,9 +421,19 @@ def add_data(model, mortality, country, year):
     model.input_data = model.input_data.append(data, ignore_index=True)
 
 def save_posterior(dm, model, country, sex, year, rate_type_list):
-    """ Save country level posterior in a csv file, and put the file in the 
+    ''' Save country level posterior in a csv file, and put the file in the 
     directory job_working_directory/posterior/country_level_posterior_dm-'id'
-    """
+    dm : dismod3.load_disease_model(model_num)
+    model : dataModel
+    country : str
+      iso country code
+    sex : str
+      one of 'male', 'female', or 'total'
+    year : int
+      one of 1990, 2005, 2010
+    rate_type_list : list
+      i.e. ['incidence', 'prevalence', 'remission', 'excess-mortality', 'duration', 'prevalence_x_excess-mortality']
+    '''
     # job working directory
     job_wd = dismod3.settings.JOB_WORKING_DIR % dm.id
 
@@ -477,4 +487,4 @@ def save_posterior(dm, model, country, sex, year, rate_type_list):
             print 'WARNING: could not save country level output for %s' % rate_type
             print e
 
-    
+def plot_fits():
