@@ -487,4 +487,39 @@ def save_posterior(dm, model, country, sex, year, rate_type_list):
             print 'WARNING: could not save country level output for %s' % rate_type
             print e
 
-def plot_fits():
+def plot_fits(disease, prior, year):
+    '''Plot country fits grouped by region'''
+    dir = '/home/j/Project/dismod/dismod_status/prod/'
+
+    world = load_new_model(disease)
+    for region in [region for regions in [world.hierarchy.neighbors(sr[1]) for sr in world.hierarchy.edges('all')] for region in regions]:
+        country_list = world.hierarchy.neighbors(region)
+        pl.figure(figsize=(24,len(country_list)*8))
+        for c,country in enumerate(country_list):
+            for s,sex in enumerate(['male', 'female']):
+                model = load_new_model(disease, country, sex)
+                for j,data_type in enumerate(['p','i','r','X','f']):
+                    pl.subplot(len(country_list)*2,5,(j+1)+(s*5)+c*10)
+                    dismod3.graphics.plot_data_bars(model.get_data(data_type))
+                    # get estimates
+                    est = pandas.read_csv(dir+'dm-%s/posterior/dm-%s-%s-%s-%s-%s.csv' % (disease, disease, full_name[data_type], country, sex, year),index_col=None)
+                    est = est.filter(like='Draw')
+                    gbd_est = get_emp(prior, data_type, country, sex, year)
+                    
+                    ymax = 0.
+                    if max(est.mean(1)) > ymax: ymax = max(est.mean(1))
+                    if max(gbd_est.mean(1)) > ymax: ymax = max(gbd_est.mean(1))
+                    
+                    # plotting
+                    pl.plot(pl.array(est.mean(1)), 'k-', label='DM-CO')
+                    pl.plot(pl.array(gbd_est.mean(1)), 'r-', label='GBD2010')
+                    pl.plot(mc.utils.hpd(pl.array(gbd_est).T, .05), 'r:')
+                    pl.plot(mc.utils.hpd(pl.array(est).T, .05), 'k:')
+                    pl.title(country +' '+ data_type +' '+ sex +' '+ str(year) )
+                    pl.axis([-5, 105, -ymax*.05, ymax*1.1])
+                    pl.legend(loc='upper left')
+                    
+        pl.savefig(dir+'/dm-%s/image/%s_%s.png'%(disease, region, year))
+
+
+
