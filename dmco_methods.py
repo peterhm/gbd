@@ -186,23 +186,15 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
     consistent : str, 'asr' (single rate type model) or 'ism' (compartmental modeling)
     '''
     if data_param == 'consistent':
-        data_types = ['f', 'i', 'p', 'r', 'X']
+        data_types = ['f', 'i', 'p', 'r'] #, 'X']
     else:
         data_types = data_param
-    
+
     # set priors
     priors = {}
     for data_type in data_types:
         # get prior for each data_type
         gbd_est = get_emp(disease, data_type, country, sex, year)
-        if log_space == True:
-            mu_rate = pl.log(pl.array(gbd_est))
-            mu_rate_mean = pl.log(pl.array(gbd_est)).mean(1)
-            covar = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_mean for _ in range(1000)]).T)
-        else:
-            mu_rate = pl.array(gbd_est)
-            mu_rate_mean = pl.array(gbd_est).mean(1)
-            covar = pl.cov(pl.array(gbd_est)-pl.array([mu_rate_mean for _ in range(1000)]).T)
         priors[data_type] = gbd_est
         
         find_fnrfx(model, disease, data_type, country, sex, year)
@@ -215,20 +207,34 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
 
     # add gamma priors and mc.potential
     for data_type in data_types:
+        gbd_est = priors[data_type]
+        if log_space == True:
+            mu_rate = pl.log(pl.array(gbd_est))
+            mu_rate_mean = pl.log(pl.array(gbd_est)).mean(1)
+            covar = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_mean for _ in range(1000)]).T)
+        else:
+            mu_rate = pl.array(gbd_est)
+            mu_rate_mean = pl.array(gbd_est).mean(1)
+            covar = pl.cov(pl.array(gbd_est)-pl.array([mu_rate_mean for _ in range(1000)]).T)
+
         try:
             for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
-                gamma_k.value = mu_rate_mean[a_k]
+                if log_space == True:
+                    gamma_k.value = mu_rate_mean[a_k]
+                else:
+                    gamma_k.value = pl.log(mu_rate_mean[a_k]+1e-10)
         except KeyError:
             pass
                 
         if log_space == True:
             @mc.potential
             def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
-                return mc.mv_normal_cov_like(pl.log(mu_child), mu, C+.01*pl.eye(101))
+                return mc.mv_normal_cov_like(pl.log(mu_child), mu, C+1.e-6*pl.eye(101))
         else:
             @mc.potential
             def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
-                return mc.mv_normal_cov_like(mu_child, mu, C+.01*pl.eye(101))
+                #return mc.normal_like(mu_child, mu, (pl.diag(C)+1)**-1)
+                return mc.mv_normal_cov_like(mu_child, mu, C+1.e-12*pl.eye(101))
         model.vars[data_type]['parent_similarity'] = parent_similarity
     
     start = clock()
