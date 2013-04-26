@@ -161,13 +161,12 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_in
     else:
         data_types = data_param
 
-    # set priors
+    # get priors and set fixed and random effects
     priors = {}
     for data_type in data_types:
         # get prior for each data_type
-        gbd_est = get_emp(disease, data_type, country, sex, year)
-        priors[data_type] = gbd_est
-        
+        priors[data_type] = get_emp(disease, data_type, country, sex, year)
+        # set RE and FE
         find_fnrfx(model, disease, data_type, country, sex, year)
     
     # add vars
