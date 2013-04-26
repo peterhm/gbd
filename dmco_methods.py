@@ -233,8 +233,6 @@ def open_mortality():
     return mortality
 
 def add_data(model, mortality, country, year):
-    import pdb
-    pdb.set_trace()
     # select desired area and year
     data = mortality[mortality['area'] == country]
     data = data[data['year_start'] == year]
