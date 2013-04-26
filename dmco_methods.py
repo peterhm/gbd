@@ -229,19 +229,12 @@ def open_mortality():
     mortality = mortality.ix[:,0:7]
     mortality.columns = ['area', 'sex', 'year_start', 'age_start', 'lower_ci', 'upper_ci', 'value']
     # add input data
-    # special case for ages
-    mortality['age_end'] = mortality['age_start']+5.
-    mortality['age_end'][mortality['age_start'] == 0] = 1
-    mortality['age_end'][mortality['age_start'] == 1] = 5
-
-    mortality['age_weights'] = pl.nan
-    mortality['data_type'] = 'm_all'
-    mortality['effective_sample_size'] = pl.nan
-    mortality['standard_error'] = pl.nan
-    mortality['year_end'] = mortality['year_start']
+    mortality = mortality[((mortality['year_start']==1990)|(mortality['year_start']==2005)|(mortality['year_start']==2010))]
     return mortality
 
 def add_data(model, mortality, country, year):
+    import pdb
+    pdb.set_trace()
     # select desired area and year
     data = mortality[mortality['area'] == country]
     data = data[data['year_start'] == year]
