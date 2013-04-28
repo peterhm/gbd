@@ -379,7 +379,7 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
                           mu_age_p,
                           mu_age_parent=priors.get(('p', 'mu')),
                           sigma_age_parent=priors.get(('p', 'sigma')),
-                          zero_re=zero_re)['p']
+                          zero_re=zero_re, rate_type=rate_type)['p']
 
     @mc.deterministic
     def mu_age_pf(p=p['mu_age'], f=rate['f']['mu_age']):
@@ -436,7 +436,7 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
                                mu_age_parent=priors.get(('m_with', 'mu')),
                                sigma_age_parent=priors.get(('m_with', 'sigma')),
                                include_covariates=False,
-                               zero_re=zero_re)['m_with']
+                               zero_re=zero_re, rate_type=rate_type)['m_with']
     
     # duration = E[time in bin C]
     @mc.deterministic
