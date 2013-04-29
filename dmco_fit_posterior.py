@@ -1,4 +1,5 @@
 import dismod3
+reload(dismod3)
 import fit_posterior 
 import json
 
