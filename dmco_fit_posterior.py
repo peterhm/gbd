@@ -33,8 +33,15 @@ mortality = pandas.read_csv('/homes/peterhm/gbd/dmco_mortality.csv')
 
 # load country model and add country-specific mortality estimates
 model = dmco.load_new_model(data_num, country, sex, cov='average')
-dmco.add_data(model, mortality, country, year)
-model, model_priors, model_t, model_mare = dmco.mvn(model, prior_num, 'consistent', country, sex, year, iter, burn, thin)
+dmco.add_data(model, mortality, country, sex, year)
+
+model.parameters['m_with'] = model.parameters['f']
+model.parameters['f']['level_bounds'] = dict(lower=0, upper=10)
+model.parameters['r']['level_value']['age_after'] = 99
+for data_type in 'irfp':
+    model.parameters[data_type]['parameter_age_mesh'] = [0, 10, 20, 35, 50, 65, 80, 100]
+
+%time model = dmco.mvn(model, gbd, 'consistent', country, sex, year, iter, burn, thin, rate_type='poisson')
 
 # generate estimates
 dmco.save_posterior(dismod3.load_disease_model(data_num), model, country, sex, year, 
