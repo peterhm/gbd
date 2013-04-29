@@ -231,9 +231,10 @@ def open_mortality():
     mortality = mortality[((mortality['year_start']==1990)|(mortality['year_start']==2005)|(mortality['year_start']==2010))]
     return mortality
 
-def add_data(model, mortality, country, year):
+def add_data(model, mortality, country, sex, year):
     # select desired area and year
     data = mortality[mortality['area'] == country]
+    data = data[(data['sex'] == sex) | (data['sex'] == 'total')]
     data = data[data['year_start'] == year]
     
     # add input data
