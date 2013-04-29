@@ -152,70 +152,53 @@ def mare(model, data_type):
     mare = pl.median((abs(pred - obs)/obs)*100)
     return mare
 
-def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, var_inflation=1, log_space=False):
-    '''multivariate normal (variance inflation optional)
-    consistent : str, 'asr' (single rate type model) or 'ism' (compartmental modeling)
+def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, rate_type='neg_binom'):
+    '''multivariate normal
+    data_param : str, 'consistent', 'i', 'r', 'f', or 'p'
     '''
     if data_param == 'consistent':
-        data_types = ['f', 'i', 'p', 'r'] #, 'X']
+        data_types = ['f', 'i', 'p', 'r']
     else:
-        data_types = data_param
+        data_types = [data_param]
 
-    # get priors and set fixed and random effects
+    # set priors
     priors = {}
     for data_type in data_types:
         # get prior for each data_type
-        priors[data_type] = get_emp(disease, data_type, country, sex, year)
+        priors[data_type] = dmco.get_emp(disease, data_type, country, sex, year)
         # set RE and FE
-        find_fnrfx(model, disease, data_type, country, sex, year)
-    
+        dmco.find_fnrfx(model, disease, data_type, country, sex, year)
+
     # add vars
     if data_param == 'consistent':
-        model.vars += dismod3.ism.consistent(model, country, sex, year)
+        model.vars += dismod3.ism.consistent(model, country, sex, year, rate_type=rate_type)
     else:
-        model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, mu_age_parent=None, sigma_age_parent=None)
-
+        model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, rate_type=rate_type)
+        
     # add gamma priors and mc.potential
     for data_type in data_types:
-        gbd_est = priors[data_type]
-        if log_space == True:
-            mu_rate = pl.log(pl.array(gbd_est))
-            mu_rate_mean = pl.log(pl.array(gbd_est)).mean(1)
-            covar = pl.cov(pl.log(pl.array(gbd_est))-pl.array([mu_rate_mean for _ in range(1000)]).T)
-        else:
-            mu_rate = pl.array(gbd_est)
-            mu_rate_mean = pl.array(gbd_est).mean(1)
-            covar = pl.cov(pl.array(gbd_est)-pl.array([mu_rate_mean for _ in range(1000)]).T)
+        pred_rate = pl.array(priors[data_type])
+        mu = pred_rate.mean(1)
+        C = pl.cov(pred_rate)
 
-        try:
-            for gamma_k, a_k in zip(model.vars[data_type]['gamma'], model.parameters[data_type]['parameter_age_mesh']):
-                if log_space == True:
-                    gamma_k.value = mu_rate_mean[a_k]
-                else:
-                    gamma_k.value = pl.log(mu_rate_mean[a_k]+1e-10)
-        except KeyError:
-            pass
-                
-        if log_space == True:
-            @mc.potential
-            def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
-                return mc.mv_normal_cov_like(pl.log(mu_child), mu, C+1.e-6*pl.eye(101))
-        else:
-            @mc.potential
-            def parent_similarity(mu_child=model.vars[data_type]['mu_age'], mu=mu_rate_mean, C=covar*var_inflation):
-                #return mc.normal_like(mu_child, mu, (pl.diag(C)+1)**-1)
-                return mc.mv_normal_cov_like(mu_child, mu, C+1.e-12*pl.eye(101))
+        knots = []
+        # knots where prediction has absolute certainty make prior with zero probability
+        for k_i in model.parameters[data_type]['parameter_age_mesh']:
+            if pred_rate[k_i,:].std() > 0:
+                knots.append(k_i)
+        
+        @mc.potential(name='parent_similarity_%s'%data_type)
+        def parent_similarity(x=model.vars[data_type]['mu_age'], mu=mu, C=C, knots=knots):
+            return mc.mv_normal_cov_like(x[knots], mu[knots], C[:,knots][knots,:])
         model.vars[data_type]['parent_similarity'] = parent_similarity
-    
-    start = clock()
+
     if data_param == 'consistent':
         dismod3.fit.fit_consistent(model, iter=iter, thin=thin, burn=burn)
     else:
         dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
-        
-    time = clock() - start
-    
-    return model, priors, time, mare(model, data_type)    
+
+    model.priors = priors
+    return model  
 
 def open_mortality():
     # load file
