@@ -165,9 +165,9 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, rate_t
     priors = {}
     for data_type in data_types:
         # get prior for each data_type
-        priors[data_type] = dmco.get_emp(disease, data_type, country, sex, year)
+        priors[data_type] = get_emp(disease, data_type, country, sex, year)
         # set RE and FE
-        dmco.find_fnrfx(model, disease, data_type, country, sex, year)
+        find_fnrfx(model, disease, data_type, country, sex, year)
 
     # add vars
     if data_param == 'consistent':
