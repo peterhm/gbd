@@ -188,7 +188,7 @@ class ModelData:
         self.input_data = self.input_data.select(lambda i: self.input_data['year_end'][i] >= start_year)
         self.input_data = self.input_data.select(lambda i: self.input_data['year_start'][i] <= end_year)
 
-        print 'kept %d rows of data' % len(self.input_data.index)
+        #print 'kept %d rows of data' % len(self.input_data.index)
 
     def predict_for(data_type, area, year, sex):
         """
