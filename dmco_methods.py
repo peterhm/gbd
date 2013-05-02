@@ -6,6 +6,7 @@ import pandas
 import pymc as mc
 from time import clock
 import pylab as pl
+from matplotlib.backends.backend_pdf import PdfPages
 
 full_name = {'p': 'prevalence', 
              'i': 'incidence', 
@@ -335,4 +336,63 @@ def plot_fits(disease, prior, year):
                     
         pl.savefig(dir+'/dm-%s/image/%s_%s.png'%(disease, region, year))
 
+def plot_fits_pdf(disease, prior, year):
+    '''Plot country fits grouped by region'''
+    dir = '/home/j/Project/dismod/dismod_status/prod/'
+    mortality = pandas.read_csv('/homes/peterhm/gbd/dmco_mortality.csv')
+    
+    world = load_new_model(disease)
+    
+    # create list of countries to report
+    country_list = pandas.read_csv('/snfs1/DATA/IHME_COUNTRY_CODES/IHME_COUNTRYCODES.CSV', index_col=None)
+    country_list = country_list[country_list.ix[:,'ihme_indic_country'] == 1]
+    country_list = list(pl.unique(country_list['iso3']))
+    country_list.remove('BMU')
+    country_list.remove('HKG')
+    country_list.remove('MAC')
+    country_list.remove('PRI')
+    
+    # create list of countries order by number of data points, then alphabetical
+    country_ordered = []
+    for country in country_list:
+        country_ordered.append((country,len(world.input_data[world.input_data['area']==country])))
+    
+    dtype = [('ISO3','S10'),('pts',int)]
+    country_ordered = pl.array(country_ordered, dtype=dtype)
+    country_ordered = list(pl.sort(country_ordered,order=['pts','ISO3']))
+    country_ordered.reverse()
+        
+    pp = PdfPages(dir + '/dm-%s/image/%s_%s_sorted.pdf'%(disease, disease, year))
+    for c,country in enumerate(country_ordered):
+        country = country[0]
+        pl.figure(c, figsize=(24,8))
+        for s,sex in enumerate(['male', 'female']):
+            model = load_new_model(disease, country, sex)
+            add_data(model, mortality, country, sex, year)
+            for j,data_type in enumerate(['p','i','r','f','m_with']):
+                pl.subplot(2,5,(j+1)+(s*5))
+                dismod3.graphics.plot_data_bars(model.get_data(data_type))
+                if data_type == 'm_with': dismod3.graphics.plot_data_bars(model.get_data('m_all'), color='grey', label='m_all')
+                # get estimates
+                if data_type != 'm_with':
+                    est = pandas.read_csv(dir+'dm-%s/posterior/dm-%s-%s-%s-%s-%s.csv' % (disease, disease, full_name[data_type], country, sex, year),index_col=None)
+                    est = est.filter(like='Draw')
+                    gbd_est = get_emp(prior, data_type, country, sex, year)
+                
+                    ymax = 0.
+                    if max(est.mean(1)) > ymax: ymax = max(est.mean(1))
+                    if max(gbd_est.mean(1)) > ymax: ymax = max(gbd_est.mean(1))
+                
+                    # plotting
+                    pl.plot(pl.array(est.mean(1)), 'k-', label='DM-CO')
+                    pl.plot(pl.array(gbd_est.mean(1)), 'r-', label='GBD2010')
+                    pl.plot(mc.utils.hpd(pl.array(gbd_est).T, .05), 'r:')
+                    pl.plot(mc.utils.hpd(pl.array(est).T, .05), 'k:')
+                pl.title(country +' '+ data_type +' '+ sex +' '+ str(year) )
+                if data_type != 'm_with': pl.axis([-5, 105, -ymax*.05, ymax*1.1])
+                pl.legend(loc='upper left')
+
+        pp.savefig(c)
+        pl.clf()
+    pp.close()
 
