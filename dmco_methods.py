@@ -355,11 +355,11 @@ def plot_fits_pdf(disease, prior, year):
     # create list of countries order by number of data points, then alphabetical
     country_ordered = []
     for country in country_list:
-        country_ordered.append((country,len(world.input_data[world.input_data['area']==country])))
+        country_ordered.append((country,len(world.input_data[world.input_data['area']==country]),len(world.get_data('p')[world.get_data('p')['area']==country])))
     
-    dtype = [('ISO3','S10'),('pts',int)]
+    dtype = [('ISO3','S10'),('pts',int),('p',int)]
     country_ordered = pl.array(country_ordered, dtype=dtype)
-    country_ordered = list(pl.sort(country_ordered,order=['pts','ISO3']))
+    country_ordered = list(pl.sort(country_ordered,order=['pts','p','ISO3']))
     country_ordered.reverse()
         
     pp = PdfPages(dir + '/dm-%s/image/%s_%s_sorted.pdf'%(disease, disease, year))
@@ -371,19 +371,27 @@ def plot_fits_pdf(disease, prior, year):
             add_data(model, mortality, country, sex, year)
             for j,data_type in enumerate(['p','i','r','f','m_with']):
                 pl.subplot(2,5,(j+1)+(s*5))
-                dismod3.graphics.plot_data_bars(model.get_data(data_type))
                 if data_type == 'm_with': dismod3.graphics.plot_data_bars(model.get_data('m_all'), color='grey', label='m_all')
                 # get estimates
                 if data_type != 'm_with':
                     est = pandas.read_csv(dir+'dm-%s/posterior/dm-%s-%s-%s-%s-%s.csv' % (disease, disease, full_name[data_type], country, sex, year),index_col=None)
                     est = est.filter(like='Draw')
                     gbd_est = get_emp(prior, data_type, country, sex, year)
-                
+                    find_fnrfx(model, prior, data_type, country, sex, year)
+                    
                     ymax = 0.
                     if max(est.mean(1)) > ymax: ymax = max(est.mean(1))
                     if max(gbd_est.mean(1)) > ymax: ymax = max(gbd_est.mean(1))
                 
                     # plotting
+                    df = model.input_data
+                    if sex == 'male': #shift all so male is zero
+                        map_func = {'male': 0, 'total': -.5, 'female': -1}
+                    if sex == 'female': #shift all so female is zero
+                        map_func = {'male': 1, 'total': .5, 'female': 0}
+
+                    model.get_data(data_type)['value'] = model.get_data(data_type)['value'] * pl.exp(-model.parameters[data_type]['fixed_effects']['x_sex']['mu'] * df[df['data_type']==data_type]['sex'].map(map_func).mean())
+                    dismod3.graphics.plot_data_bars(df[df['data_type']==data_type])
                     pl.plot(pl.array(est.mean(1)), 'k-', label='DM-CO')
                     pl.plot(pl.array(gbd_est.mean(1)), 'r-', label='GBD2010')
                     pl.plot(mc.utils.hpd(pl.array(gbd_est).T, .05), 'r:')
