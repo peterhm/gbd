@@ -1,3 +1,5 @@
+'''Run with the following arguments: data_num prior_num year'''
+
 import pylab as pl
 import pandas 
 import sys

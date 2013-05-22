@@ -337,7 +337,7 @@ def plot_fits(disease, prior, year):
         pl.savefig(dir+'/dm-%s/image/%s_%s.png'%(disease, region, year))
 
 def plot_fits_pdf(disease, prior, year):
-    '''Plot country fits grouped by region'''
+    '''Plot country fits'''
     dir = '/home/j/Project/dismod/dismod_status/prod/'
     mortality = pandas.read_csv('/homes/peterhm/gbd/dmco_mortality.csv')
     
