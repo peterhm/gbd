@@ -365,12 +365,12 @@ def plot_fits_pdf(disease, prior, year, rate_type_list):
     pp = PdfPages(dir + '/dm-%s/image/%s_%s_sorted.pdf'%(disease, disease, year))
     for c,country in enumerate(country_ordered):
         country = country[0]
-        pl.figure(c, figsize=(24,8))
+        pl.figure(c, figsize=(len(rate_type_list)*4,8))
         for s,sex in enumerate(['male', 'female']):
             model = load_new_model(disease, country, sex)
             add_data(model, mortality, country, sex, year)
             for j,data_type in enumerate(rate_type_list):
-                pl.subplot(2,5,(j+1)+(s*5))
+                pl.subplot(2,len(rate_type_list),(j+1)+(s*len(rate_type_list)))
                 if data_type == 'm_with': dismod3.graphics.plot_data_bars(model.get_data('m_all'), color='grey', label='m_all')
                 # get estimates
                 if data_type != 'm_with':
@@ -398,7 +398,8 @@ def plot_fits_pdf(disease, prior, year, rate_type_list):
                     pl.plot(mc.utils.hpd(pl.array(est).T, .05), 'k:')
                 pl.title(country +' '+ data_type +' '+ sex +' '+ str(year) )
                 if data_type != 'm_with': pl.axis([-5, 105, -ymax*.05, ymax*1.1])
-                pl.legend(loc='upper left')
+                if sex == 'male': pl.legend(loc=(.25,1.145))
+        pl.subplots_adjust(top=.85, bottom=.05)
 
         pp.savefig(c)
         pl.clf()
