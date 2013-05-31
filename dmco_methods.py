@@ -154,8 +154,17 @@ def mare(model, data_type):
     return mare
 
 def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, rate_type='neg_binom'):
-    '''multivariate normal
+    ''' multivariate normal country-sex-specific fit
+    model : data.Model()
+    disease : int, model number
     data_param : str, 'consistent', 'i', 'r', 'f', or 'p'
+    country : str, ISO3 code
+    sex : str, 'male', 'female', or 'total'
+    year : int, 1990, 2005, 2010
+    iter : int,
+    burn : int,
+    thin : int,
+    rate_type : 
     '''
     if data_param == 'consistent':
         data_types = ['f', 'i', 'p', 'r']
