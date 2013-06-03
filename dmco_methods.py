@@ -351,7 +351,7 @@ def plot_fits(disease, prior, year):
                     
         pl.savefig(dir+'/dm-%s/image/%s_%s.png'%(disease, region, year))
 
-def plot_fits_pdf(disease, prior, year, param_type_list):
+def plot_fits_pdf(disease, prior, year, param_type_list, filename=''):
     '''Plot country fits'''
     dir = '/home/j/Project/dismod/dismod_status/prod/'
     mortality = pandas.read_csv('/homes/peterhm/gbd/dmco_mortality.csv')
@@ -377,7 +377,7 @@ def plot_fits_pdf(disease, prior, year, param_type_list):
     country_ordered = list(pl.sort(country_ordered,order=['pts','p','ISO3']))
     country_ordered.reverse()
         
-    pp = PdfPages(dir + '/dm-%s/image/%s_%s_sorted.pdf'%(disease, disease, year))
+    pp = PdfPages(dir + '/dm-%s/image/%s_w_prior_%s_%s.pdf'%(disease, prior, year, filename))
     for c,country in enumerate(country_ordered):
         country = country[0]
         pl.figure(c, figsize=(len(param_type_list)*4,8))
