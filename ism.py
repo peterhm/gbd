@@ -268,17 +268,30 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
     :Parameters:
       - `model` : data.ModelData
       - `data_type` : str, one of 'i', 'r', 'f', 'p', or 'pf'
-      - `root_area, root_sex, root_year` : the node of the model to fit consistently
-      - `priors` : dictionary, with keys for data types for lists of priors on age patterns
-      - `zero_re` : boolean, change one stoch from each set of siblings in area hierarchy to a 'sum to zero' deterministic
-      - `rate_type` : str, optional. One of 'beta_binom', 'binom', 'log_normal_model', 'neg_binom', 'neg_binom_lower_bound_model', 'neg_binom_model', 'normal_model', 'offest_log_normal', or 'poisson'
+      - `root_area, root_sex, root_year` : the node of the model to
+        fit consistently
+      - `priors` : dictionary, with keys for data types for lists of
+        priors on age patterns
+      - `zero_re` : boolean, change one stoch from each set of
+        siblings in area hierarchy to a 'sum to zero' deterministic
+      - `rate_type` : str or dict, optional. One of 'beta_binom',
+        'binom', 'log_normal_model', 'neg_binom',
+        'neg_binom_lower_bound_model', 'neg_binom_model',
+        'normal_model', 'offest_log_normal', or 'poisson', optionally
+        as a dict, with keys i, r, f, p, m_with
 
     :Results:
-      - Returns dict of dicts of PyMC objects, including 'i', 'p', 'r', 'f', the covariate adjusted predicted values for each row of data
+      - Returns dict of dicts of PyMC objects, including 'i', 'p',
+        'r', 'f', the covariate adjusted predicted values for each row
+        of data
     
     .. note::
-      - dict priors can contain keys (t, 'mu') and (t, 'sigma') to tell the consistent model about the priors on levels for the age-specific rate of type t (these are arrays for mean and standard deviation a priori for mu_age[t]
-      - it can also contain dicts keyed by t alone to insert empirical priors on the fixed effects and random effects
+      - dict priors can contain keys (t, 'mu') and (t, 'sigma') to
+        tell the consistent model about the priors on levels for the
+        age-specific rate of type t (these are arrays for mean and
+        standard deviation a priori for mu_age[t]
+      - it can also contain dicts keyed by t alone to insert empirical
+        priors on the fixed effects and random effects
 
     """
     # TODO: refactor the way priors are handled
@@ -288,13 +301,17 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
             model.parameters[t]['random_effects'].update(priors[t]['random_effects'])
             model.parameters[t]['fixed_effects'].update(priors[t]['fixed_effects'])
 
+    # if rate_type is a string, make it into a dict
+    if type(rate_type) == str:
+        rate_type = dict(i=rate_type, r=rate_type, f=rate_type, p=rate_type, m_with=rate_type)
+
     rate = {}
     ages = model.parameters['ages']
 
     for t in 'irf':
         rate[t] = age_specific_rate(model, t, reference_area, reference_sex, reference_year,
                                     mu_age=None, mu_age_parent=priors.get((t, 'mu')), sigma_age_parent=priors.get((t, 'sigma')),
-                                    zero_re=zero_re, rate_type=rate_type)[t] # age_specific_rate()[t] is to create proper nesting of dict
+                                    zero_re=zero_re, rate_type=rate_type[t])[t] # age_specific_rate()[t] is to create proper nesting of dict
 
         # set initial values from data
         if t in priors:
@@ -436,7 +453,7 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
                                mu_age_parent=priors.get(('m_with', 'mu')),
                                sigma_age_parent=priors.get(('m_with', 'sigma')),
                                include_covariates=False,
-                               zero_re=zero_re, rate_type=rate_type)['m_with']
+                               zero_re=zero_re, rate_type=rate_type['m_with'])['m_with']
     
     # duration = E[time in bin C]
     @mc.deterministic
