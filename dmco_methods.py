@@ -157,7 +157,7 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, rate_t
     ''' multivariate normal country-sex-specific fit
     model : data.Model()
     disease : int, model number
-    data_param : str, 'consistent', 'i', 'r', 'f', or 'p'
+    param_type_list : list of str, 'i', 'r', 'f', or 'p'
     country : str, ISO3 code
     sex : str, 'male', 'female', or 'total'
     year : int, 1990, 2005, 2010
@@ -166,27 +166,23 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, rate_t
     thin : int,
     rate_type : 
     '''
-    if data_param == 'consistent':
-        data_types = ['f', 'i', 'p', 'r']
-    else:
-        data_types = [data_param]
 
     # set priors
     priors = {}
-    for data_type in data_types:
+    for data_type in param_type_list:
         # get prior for each data_type
         priors[data_type] = get_emp(disease, data_type, country, sex, year)
         # set RE and FE
         find_fnrfx(model, disease, data_type, country, sex, year)
 
     # add vars
-    if data_param == 'consistent':
+    if len(param_type_list) > 1:
         model.vars += dismod3.ism.consistent(model, country, sex, year, rate_type=rate_type)
     else:
         model.vars += dismod3.ism.age_specific_rate(model, data_type, country, sex, year, rate_type=rate_type)
         
     # add gamma priors and mc.potential
-    for data_type in data_types:
+    for data_type in param_type_list:
         pred_rate = pl.array(priors[data_type])
         mu = pred_rate.mean(1)
         C = pl.cov(pred_rate)
@@ -202,7 +198,7 @@ def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, rate_t
             return mc.mv_normal_cov_like(x[knots], mu[knots], C[:,knots][knots,:])
         model.vars[data_type]['parent_similarity'] = parent_similarity
 
-    if data_param == 'consistent':
+    if len(param_type_list) > 1:
         dismod3.fit.fit_consistent(model, iter=iter, thin=thin, burn=burn)
     else:
         dismod3.fit.fit_asr(model, data_type, iter=iter, burn=burn, thin=thin)
