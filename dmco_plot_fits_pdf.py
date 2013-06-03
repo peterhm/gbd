@@ -14,4 +14,4 @@ import sys
 import dmco_methods as dmco
 reload(dmco)
 
-dmco.plot_fits_pdf(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+dmco.plot_fits_pdf(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4].split(' '))

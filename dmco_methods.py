@@ -153,7 +153,7 @@ def mare(model, data_type):
     mare = pl.median((abs(pred - obs)/obs)*100)
     return mare
 
-def mvn(model, disease, param_type_list, country, sex, year, iter, burn, thin, rate_type='neg_binom'):
+def mvn(model, disease, param_type_list, country, sex, year, iter, burn, thin, rate_type_list):
     ''' multivariate normal country-sex-specific fit
     model : data.Model()
     disease : int, model number
@@ -164,8 +164,12 @@ def mvn(model, disease, param_type_list, country, sex, year, iter, burn, thin, r
     iter : int,
     burn : int,
     thin : int,
-    rate_type : 
+    rate_type_list : 
     '''
+
+    # assert that system arguments are correct
+    if len(rate_type_list) != 1:
+        assert len(rate_type_list) == len(param_type_list), 'rate_type_list has the incorrect number of arguments--length must be 1 or match length of param_type_list'
 
     # set priors
     priors = {}
