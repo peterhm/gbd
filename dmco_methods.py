@@ -244,7 +244,7 @@ def add_data(model, mortality, country, sex, year):
 
     model.input_data = model.input_data.append(data, ignore_index=True)
 
-def save_posterior(dm, model, country, sex, year, rate_type_list):
+def save_posterior(dm, model, country, sex, year, param_type_list):
     ''' Save country level posterior in a csv file, and put the file in the 
     directory job_working_directory/posterior/country_level_posterior_dm-'id'
     dm : dismod3.load_disease_model(model_num)
@@ -255,7 +255,7 @@ def save_posterior(dm, model, country, sex, year, rate_type_list):
       one of 'male', 'female', or 'total'
     year : int
       one of 1990, 2005, 2010
-    rate_type_list : list
+    param_type_list : list
       i.e. ['incidence', 'prevalence', 'remission', 'excess-mortality', 'duration', 'prevalence_x_excess-mortality']
     '''
     # job working directory
@@ -265,15 +265,13 @@ def save_posterior(dm, model, country, sex, year, rate_type_list):
     dir = job_wd + '/posterior/'
 
     # create posteriors for rate types
-    for rate_type in rate_type_list:
+    for data_param in param_type_list:
         try:
             # make an output file
-            filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(dm.id), rate_type, country, sex, year)
+            filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(dm.id), full_name[data_param], country, sex, year)
             print('writing csv file %s' % (dir + filename))
 
             # set prior bounds
-            t = {'incidence': 'i', 'prevalence': 'p', 'remission': 'r', 'excess-mortality': 'f',
-                 'prevalence_x_excess-mortality': 'pf', 'duration': 'X'}[rate_type]
             if t in model.vars:
                 if t in model.parameters and 'level_bounds' in model.parameters[t]:
                     lower=model.parameters[t]['level_bounds']['lower']
@@ -301,14 +299,14 @@ def save_posterior(dm, model, country, sex, year, rate_type_list):
                 file = pandas.DataFrame(posterior, columns=['Draw%d'%i for i in range(draws)])
                 file['Iso3'] = country
                 file['Population'] = dismod3.neg_binom_model.population_by_age[(country, str(year), sex)]
-                file['Rate type'] = rate_type
+                file['Rate type'] = data_param
                 file['Age'] = model.parameters['ages']
                 
                 # save file
                 file.to_csv(dir+filename, index=False)
 
         except IOError, e:
-            print 'WARNING: could not save country level output for %s' % rate_type
+            print 'WARNING: could not save country level output for %s' % data_param
             print e
 
 def plot_fits(disease, prior, year):
