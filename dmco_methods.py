@@ -164,13 +164,21 @@ def mvn(model, disease, param_type_list, country, sex, year, iter, burn, thin, r
     iter : int,
     burn : int,
     thin : int,
-    rate_type_list : 
+    rate_type_list : list of str, length must be equal to param_type_list or of length 1, ex. if len(param_type_list)==1: rate_type_list=['neg_binom', 'binom']
     '''
 
     # assert that system arguments are correct
     if len(rate_type_list) != 1:
         assert len(rate_type_list) == len(param_type_list), 'rate_type_list has the incorrect number of arguments--length must be 1 or match length of param_type_list'
-
+    
+    # if there are multiple rate types, create a dictionary with keys corresponding to data_type
+    if len(rate_type_list) > 1:
+        rate_type = {}
+        for i,data_type in enumerate(param_type_list):
+            rate_type[data_type] = rate_type_list[i]
+    # otherwise, change list to string to be correctly processed by ism.py
+    else:
+        rate_type = rate_type_list[0]
     # set priors
     priors = {}
     for data_type in param_type_list:
