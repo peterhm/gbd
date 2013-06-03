@@ -12,6 +12,10 @@ import pandas
 import sys
 import os
 
+# assert that system arguments are correct
+if len(sys.argv[5].split(' ')) != 1:
+    assert len(sys.argv[5].split(' ')) == len(sys.argv[4].split(' ')), 'rate_type_list has the incorrect number of arguments--length must be 1 or match length of param_type_list'
+
 # download data to j drive
 os.system('/usr/local/epd-7.2-2/bin/python download_model.py %s'%(sys.argv[1]))
 

@@ -25,12 +25,16 @@ import os
 import dmco_methods as dmco
 reload(dmco)
 
+# assert that system arguments are correct
+if len(sys.argv[5].split(' ')) != 1:
+    assert len(sys.argv[5].split(' ')) == len(sys.argv[4].split(' ')), 'rate_type_list has the incorrect number of arguments--length must be 1 or match length of param_type_list'
+
 # model id number for data
 data_num = int(sys.argv[1])
 prior_num = int(sys.argv[2])
 year = int(sys.argv[3])
-param_tye_list = sys.argv[4]
-rate_tye_list = sys.argv[5]
+param_tye_list = sys.argv[4].split(' ')
+rate_tye_list = sys.argv[5].split(' ')
 country = str(sys.argv[6])
 sex = str(sys.argv[7])
 
@@ -52,5 +56,3 @@ model = dmco.mvn(model, prior_num, param_type_list, country, sex, year, iter, bu
 # generate estimates
 dmco.save_posterior(dismod3.load_disease_model(data_num), model, country, sex, year, 
                     param_type_list)
-
-
