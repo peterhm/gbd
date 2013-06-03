@@ -153,7 +153,7 @@ def mare(model, data_type):
     mare = pl.median((abs(pred - obs)/obs)*100)
     return mare
 
-def mvn(model, disease, data_param, country, sex, year, iter, burn, thin, rate_type='neg_binom'):
+def mvn(model, disease, param_type_list, country, sex, year, iter, burn, thin, rate_type='neg_binom'):
     ''' multivariate normal country-sex-specific fit
     model : data.Model()
     disease : int, model number
@@ -261,10 +261,10 @@ def save_posterior(dm, model, country, sex, year, param_type_list):
     dir = job_wd + '/posterior/'
 
     # create posteriors for rate types
-    for data_param in param_type_list:
+    for data_type in param_type_list:
         try:
             # make an output file
-            filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(dm.id), full_name[data_param], country, sex, year)
+            filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(dm.id), full_name[data_type], country, sex, year)
             print('writing csv file %s' % (dir + filename))
 
             # set prior bounds
@@ -295,14 +295,14 @@ def save_posterior(dm, model, country, sex, year, param_type_list):
                 file = pandas.DataFrame(posterior, columns=['Draw%d'%i for i in range(draws)])
                 file['Iso3'] = country
                 file['Population'] = dismod3.neg_binom_model.population_by_age[(country, str(year), sex)]
-                file['Rate type'] = data_param
+                file['Rate type'] = data_type
                 file['Age'] = model.parameters['ages']
                 
                 # save file
                 file.to_csv(dir+filename, index=False)
 
         except IOError, e:
-            print 'WARNING: could not save country level output for %s' % data_param
+            print 'WARNING: could not save country level output for %s' % data_type
             print e
 
 def plot_fits(disease, prior, year):
