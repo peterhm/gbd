@@ -345,7 +345,7 @@ def plot_fits(disease, prior, year):
                     
         pl.savefig(dir+'/dm-%s/image/%s_%s.png'%(disease, region, year))
 
-def plot_fits_pdf(disease, prior, year, rate_type_list):
+def plot_fits_pdf(disease, prior, year, param_type_list):
     '''Plot country fits'''
     dir = '/home/j/Project/dismod/dismod_status/prod/'
     mortality = pandas.read_csv('/homes/peterhm/gbd/dmco_mortality.csv')
@@ -374,12 +374,12 @@ def plot_fits_pdf(disease, prior, year, rate_type_list):
     pp = PdfPages(dir + '/dm-%s/image/%s_%s_sorted.pdf'%(disease, disease, year))
     for c,country in enumerate(country_ordered):
         country = country[0]
-        pl.figure(c, figsize=(len(rate_type_list)*4,8))
+        pl.figure(c, figsize=(len(param_type_list)*4,8))
         for s,sex in enumerate(['male', 'female']):
             model = load_new_model(disease, country, sex)
             add_data(model, mortality, country, sex, year)
-            for j,data_type in enumerate(rate_type_list):
-                pl.subplot(2,len(rate_type_list),(j+1)+(s*len(rate_type_list)))
+            for j,data_type in enumerate(param_type_list):
+                pl.subplot(2,len(param_type_list),(j+1)+(s*len(param_type_list)))
                 if data_type == 'm_with': dismod3.graphics.plot_data_bars(model.get_data('m_all'), color='grey', label='m_all')
                 # get estimates
                 if data_type != 'm_with':
