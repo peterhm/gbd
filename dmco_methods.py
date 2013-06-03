@@ -12,7 +12,7 @@ full_name = {'p': 'prevalence',
              'i': 'incidence', 
              'r': 'remission', 
              'f': 'excess-mortality', 
-             'pf': 'pf', 
+             'pf': 'prevalence_x_excess-mortality', 
              'csmr': 'r_specific', 
              'm_all': 'r_all',
              'm_with': 'r_with',
@@ -252,7 +252,7 @@ def add_data(model, mortality, country, sex, year):
 
     model.input_data = model.input_data.append(data, ignore_index=True)
 
-def save_posterior(dm, model, country, sex, year, param_type_list):
+def save_posterior(dm, model, country, sex, year, param_type_list, folder):
     ''' Save country level posterior in a csv file, and put the file in the 
     directory job_working_directory/posterior/country_level_posterior_dm-'id'
     dm : dismod3.load_disease_model(model_num)
@@ -264,13 +264,13 @@ def save_posterior(dm, model, country, sex, year, param_type_list):
     year : int
       one of 1990, 2005, 2010
     param_type_list : list
-      i.e. ['incidence', 'prevalence', 'remission', 'excess-mortality', 'duration', 'prevalence_x_excess-mortality']
+      i.e. ['i', 'p', 'r', 'f', 'X', 'pf']
     '''
     # job working directory
     job_wd = dismod3.settings.JOB_WORKING_DIR % dm.id
 
     # directory to save the file
-    dir = job_wd + '/posterior/'
+    dir = job_wd + '/posterior/' + folder
 
     # create posteriors for rate types
     for data_type in param_type_list:
