@@ -4,11 +4,14 @@ import fit_posterior
 import json
 
 '''
-Run with the following arguments: data_num prior_num year rate_type_list
+Run with the following arguments: data_num prior_num year param_type_list rate_type_list country sex
 data_num : int, location of data
 prior_num : int, 
 year : int, 1990, 2005, or 2010
-rate_type_list : str, list of rate_types separated by ' ', ex. 'p i f r' 
+param_type_list : str, list of data_types separated by ' ', ex. 'p i f r' 
+rate_type_list : str, list of rate_types separated by ' ', length must be equal to param_type_list or of length 1, ex. 'neg_binom binom poisson binom' 
+country : str, ISO3
+sex : str, 'male', 'female', or 'both'
 '''
 
 import pandas 
@@ -26,9 +29,10 @@ reload(dmco)
 data_num = int(sys.argv[1])
 prior_num = int(sys.argv[2])
 year = int(sys.argv[3])
-rate_tye_list = sys.argv[4]
-country = str(sys.argv[5])
-sex = str(sys.argv[6])
+param_tye_list = sys.argv[4]
+rate_tye_list = sys.argv[5]
+country = str(sys.argv[6])
+sex = str(sys.argv[7])
 
 # run settings
 # iter=500
@@ -43,10 +47,10 @@ model = dmco.load_new_model(data_num, country, sex, cov='average')
 # dmco.add_data(model, mortality, country, sex, year)
 model.keep(start_year=2005)
 
-model = dmco.mvn(model, prior_num, 'p', country, sex, year, iter, burn, thin, rate_type='neg_binom')
+model = dmco.mvn(model, prior_num, param_type_list, country, sex, year, iter, burn, thin, rate_type=rate_type_list)
 
 # generate estimates
 dmco.save_posterior(dismod3.load_disease_model(data_num), model, country, sex, year, 
-                    rate_type_list)
+                    param_type_list)
 
 
