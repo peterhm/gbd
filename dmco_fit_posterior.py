@@ -1,8 +1,3 @@
-import dismod3
-reload(dismod3)
-import fit_posterior 
-import json
-
 '''
 Run with the following arguments: data_num prior_num year param_type_list rate_type_list country sex
 data_num : int, location of data
@@ -13,6 +8,11 @@ rate_type_list : str, list of rate_types separated by ' ', length must be equal 
 country : str, ISO3
 sex : str, 'male', 'female', or 'both'
 '''
+
+import dismod3
+reload(dismod3)
+import fit_posterior 
+import json
 
 import pandas 
 import pymc as mc
