@@ -3,6 +3,14 @@ reload(dismod3)
 import fit_posterior 
 import json
 
+'''
+Run with the following arguments: data_num prior_num year rate_type_list
+data_num : int, location of data
+prior_num : int, 
+year : int, 1990, 2005, or 2010
+rate_type_list : str, list of rate_types separated by ' ', ex. 'p i f r' 
+'''
+
 import pandas 
 import pymc as mc
 
@@ -18,8 +26,9 @@ reload(dmco)
 data_num = int(sys.argv[1])
 prior_num = int(sys.argv[2])
 year = int(sys.argv[3])
-country = str(sys.argv[4])
-sex = str(sys.argv[5])
+rate_tye_list = sys.argv[4]
+country = str(sys.argv[5])
+sex = str(sys.argv[6])
 
 # run settings
 # iter=500
@@ -38,6 +47,6 @@ model = dmco.mvn(model, prior_num, 'p', country, sex, year, iter, burn, thin, ra
 
 # generate estimates
 dmco.save_posterior(dismod3.load_disease_model(data_num), model, country, sex, year, 
-                    ['prevalence'])
+                    rate_type_list)
 
 
