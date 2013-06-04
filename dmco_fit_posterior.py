@@ -51,7 +51,7 @@ model = dmco.load_new_model(data_num, country, sex, cov='average')
 # dmco.add_data(model, mortality, country, sex, year)
 model.keep(start_year=2005)
 
-model = dmco.mvn(model, prior_num, param_type_list, country, sex, year, iter, burn, thin, rate_type=rate_type_list)
+model = dmco.mvn(model, prior_num, param_type_list, country, sex, year, iter, burn, thin, rate_type_list=rate_type_list)
 
 # generate estimates
 dmco.save_posterior(dismod3.load_disease_model(data_num), model, country, sex, year, param_type_list)
