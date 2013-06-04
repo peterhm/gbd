@@ -304,6 +304,9 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
     # if rate_type is a string, make it into a dict
     if type(rate_type) == str:
         rate_type = dict(i=rate_type, r=rate_type, f=rate_type, p=rate_type, m_with=rate_type)
+        
+    if 'm_with' not in rate_type.keys():
+        rate_type['m_with'] = 'neg_binom'
 
     rate = {}
     ages = model.parameters['ages']
@@ -396,7 +399,7 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
                           mu_age_p,
                           mu_age_parent=priors.get(('p', 'mu')),
                           sigma_age_parent=priors.get(('p', 'sigma')),
-                          zero_re=zero_re, rate_type=rate_type)['p']
+                          zero_re=zero_re, rate_type=rate_type['p'])['p']
 
     @mc.deterministic
     def mu_age_pf(p=p['mu_age'], f=rate['f']['mu_age']):
