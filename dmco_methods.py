@@ -252,7 +252,7 @@ def add_data(model, mortality, country, sex, year):
 
     model.input_data = model.input_data.append(data, ignore_index=True)
 
-def save_posterior(dm, model, country, sex, year, param_type_list, folder):
+def save_posterior(dm, model, country, sex, year, param_type_list, folder=''):
     ''' Save country level posterior in a csv file, and put the file in the 
     directory job_working_directory/posterior/country_level_posterior_dm-'id'
     dm : dismod3.load_disease_model(model_num)
@@ -279,6 +279,7 @@ def save_posterior(dm, model, country, sex, year, param_type_list, folder):
             filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(dm.id), full_name[data_type], country, sex, year)
             print('writing csv file %s' % (dir + filename))
 
+            t = full_name[data_type]
             # set prior bounds
             if t in model.vars:
                 if t in model.parameters and 'level_bounds' in model.parameters[t]:
