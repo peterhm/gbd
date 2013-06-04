@@ -33,8 +33,8 @@ if len(sys.argv[5].split(' ')) != 1:
 data_num = int(sys.argv[1])
 prior_num = int(sys.argv[2])
 year = int(sys.argv[3])
-param_tye_list = sys.argv[4].split(' ')
-rate_tye_list = sys.argv[5].split(' ')
+param_type_list = sys.argv[4].split(' ')
+rate_type_list = sys.argv[5].split(' ')
 country = str(sys.argv[6])
 sex = str(sys.argv[7])
 
