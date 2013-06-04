@@ -270,7 +270,7 @@ def save_posterior(disease, model, country, sex, year, param_type_list, folder='
     job_wd = '/home/j/Project/dismod/dismod_status/prod/dm-%s/'%(disease) 
 
     # directory to save the file
-    dir = job_wd + '/posterior/' + folder
+    dir = job_wd + 'posterior/' + folder
 
     # create posteriors for rate types
     for data_type in param_type_list:
