@@ -54,4 +54,4 @@ model.keep(start_year=2005)
 model = dmco.mvn(model, prior_num, param_type_list, country, sex, year, iter, burn, thin, rate_type_list=rate_type_list)
 
 # generate estimates
-dmco.save_posterior(dismod3.load_disease_model(data_num), model, country, sex, year, param_type_list)
+dmco.save_posterior(data_num, model, country, sex, year, param_type_list)

@@ -252,10 +252,10 @@ def add_data(model, mortality, country, sex, year):
 
     model.input_data = model.input_data.append(data, ignore_index=True)
 
-def save_posterior(dm, model, country, sex, year, param_type_list, folder=''):
+def save_posterior(disease, model, country, sex, year, param_type_list, folder=''):
     ''' Save country level posterior in a csv file, and put the file in the 
     directory job_working_directory/posterior/country_level_posterior_dm-'id'
-    dm : dismod3.load_disease_model(model_num)
+    disease : int, model number
     model : dataModel
     country : str
       iso country code
@@ -267,7 +267,7 @@ def save_posterior(dm, model, country, sex, year, param_type_list, folder=''):
       i.e. ['i', 'p', 'r', 'f', 'X', 'pf']
     '''
     # job working directory
-    job_wd = dismod3.settings.JOB_WORKING_DIR % dm.id
+    job_wd = '/home/j/Project/dismod/dismod_status/prod/dm-%s/'%(disease) 
 
     # directory to save the file
     dir = job_wd + '/posterior/' + folder
@@ -276,7 +276,7 @@ def save_posterior(dm, model, country, sex, year, param_type_list, folder=''):
     for data_type in param_type_list:
         try:
             # make an output file
-            filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(dm.id), full_name[data_type], country, sex, year)
+            filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(disease), full_name[data_type], country, sex, year)
             print('writing csv file %s' % (dir + filename))
 
             t = full_name[data_type]
