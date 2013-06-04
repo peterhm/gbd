@@ -6,9 +6,6 @@ year : int, 1990, 2005, or 2010
 rate_type_list : str, list of rate_types separated by ' ', ex. 'p i f r' 
 '''
 
-import matplotlib
-matplotlib.use('AGG')
-
 import sys
 
 import dmco_methods as dmco
