@@ -39,17 +39,17 @@ country = str(sys.argv[6])
 sex = str(sys.argv[7])
 
 # run settings
-# iter=500
-# burn=1
-# thin=2
-iter=20000
-burn=10000
-thin=10
+iter=102
+burn=1
+thin=1
+# iter=20000
+# burn=10000
+# thin=10
 
 # load country model and add country-specific mortality estimates
 model = dmco.load_new_model(data_num, country, sex, cov='average')
 # dmco.add_data(model, mortality, country, sex, year)
-model.keep(start_year=2005)
+#model.keep(start_year=2005)
 
 model = dmco.mvn(model, prior_num, param_type_list, country, sex, year, iter, burn, thin, rate_type_list=rate_type_list)
 

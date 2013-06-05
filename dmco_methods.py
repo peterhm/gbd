@@ -279,22 +279,21 @@ def save_posterior(disease, model, country, sex, year, param_type_list, folder='
             filename = 'dm-%s-%s-%s-%s-%s.csv' % (str(disease), full_name[data_type], country, sex, year)
             print('writing csv file %s' % (dir + filename))
 
-            t = full_name[data_type]
             # set prior bounds
-            if t in model.vars:
-                if t in model.parameters and 'level_bounds' in model.parameters[t]:
-                    lower=model.parameters[t]['level_bounds']['lower']
-                    upper=model.parameters[t]['level_bounds']['upper']
+            if data_type in model.vars:
+                if data_type in model.parameters and 'level_bounds' in model.parameters[data_type]:
+                    lower=model.parameters[data_type]['level_bounds']['lower']
+                    upper=model.parameters[data_type]['level_bounds']['upper']
                 else:
                     lower=0
                     upper=pl.inf
 
                 posterior = covariate_model.predict_for(model,
-                                                        model.parameters[t],
+                                                        model.parameters[data_type],
                                                         country, sex, year,
                                                         country, sex, year,
                                                         True,  # population weighted averages
-                                                        model.vars[t],
+                                                        model.vars[data_type],
                                                         lower, upper).T
 
                 # create correct number of draws
