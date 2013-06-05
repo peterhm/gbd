@@ -41,13 +41,21 @@ rate_type_list = sys.argv[5].split(' ')
 country = str(sys.argv[6])
 sex = str(sys.argv[7])
 
+print 'data_num', data_num
+print 'prior_num', prior_num 
+print 'year', year 
+print 'param_type_list', param_type_list
+print 'rate_type_list', rate_type_list
+print 'country', country
+print 'sex', sex 
+
 # run settings
-# iter=102
-# burn=1
-# thin=1
-iter=20000
-burn=10000
-thin=10
+iter=102
+burn=1
+thin=1
+# iter=20000
+# burn=10000
+# thin=10
 
 # load country model and add country-specific mortality estimates
 model = dmco.load_new_model(data_num, country, sex, cov='average')
