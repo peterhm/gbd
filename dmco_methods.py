@@ -386,9 +386,9 @@ def plot_fits_pdf(disease, prior, year, param_type_list, filename=''):
             add_data(model, mortality, country, sex, year)
             for j,data_type in enumerate(param_type_list):
                 pl.subplot(2,len(param_type_list),(j+1)+(s*len(param_type_list)))
-                if data_type == 'm_with': dismod3.graphics.plot_data_bars(model.get_data('m_all'), color='grey', label='m_all')
+                if (data_type == 'm_with') | (data_type == 'm_all'): dismod3.graphics.plot_data_bars(model.get_data('m_all'), color='grey', label='m_all')
                 # get estimates
-                if data_type != 'm_with':
+                if (data_type != 'm_with') | (data_type != 'm_all'):
                     est = pandas.read_csv(dir+'dm-%s/posterior/dm-%s-%s-%s-%s-%s.csv' % (disease, disease, full_name[data_type], country, sex, year),index_col=None)
                     est = est.filter(like='Draw')
                     gbd_est = get_emp(prior, data_type, country, sex, year)
@@ -412,7 +412,7 @@ def plot_fits_pdf(disease, prior, year, param_type_list, filename=''):
                     pl.plot(mc.utils.hpd(pl.array(gbd_est).T, .05), 'r:')
                     pl.plot(mc.utils.hpd(pl.array(est).T, .05), 'k:')
                 pl.title(country +' '+ data_type +' '+ sex +' '+ str(year) )
-                if data_type != 'm_with': pl.axis([-5, 105, -ymax*.05, ymax*1.1])
+                if (data_type != 'm_with') | (data_type != 'm_all'): pl.axis([-5, 105, -ymax*.05, ymax*1.1])
                 if sex == 'male': pl.legend(loc=(.25,1.145))
         pl.subplots_adjust(top=.85, bottom=.05)
 

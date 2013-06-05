@@ -17,13 +17,16 @@ import json
 import pandas 
 import pymc as mc
 
-from time import clock
+import time
 import pylab as pl
 import sys
 import os
 
 import dmco_methods as dmco
 reload(dmco)
+
+# time process
+start = time.time()
 
 # assert that system arguments are correct
 if len(sys.argv[5].split(' ')) != 1:
@@ -48,10 +51,15 @@ thin=1
 
 # load country model and add country-specific mortality estimates
 model = dmco.load_new_model(data_num, country, sex, cov='average')
-# dmco.add_data(model, mortality, country, sex, year)
-#model.keep(start_year=2005)
+mortality = pandas.read_csv('/homes/peterhm/gbd/dmco_mortality.csv')
+dmco.add_data(model, mortality, country, sex, year)
+model.keep(start_year=year-2)
+model.keep(end_year=year+2)
 
 model = dmco.mvn(model, prior_num, param_type_list, country, sex, year, iter, burn, thin, rate_type_list=rate_type_list)
 
 # generate estimates
 dmco.save_posterior(data_num, model, country, sex, year, param_type_list)
+
+# record time of process
+pandas.DataFrame({'job':country+str(year)+sex,'time':time.time() - start}, index=[0]).to_csv('/home/j/Project/dismod/dismod_status/prod/dm-%s/posterior/stdout/%s.csv'%(data_num,country+str(year)+sex))
