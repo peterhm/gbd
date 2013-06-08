@@ -21,7 +21,7 @@ if len(sys.argv[5].split(' ')) != 1:
     assert len(sys.argv[5].split(' ')) == len(sys.argv[4].split(' ')), 'rate_type_list has the incorrect number of arguments--length must be 1 or match length of param_type_list'
 
 # download data to j drive
-os.system('/usr/local/epd-7.2-2/bin/python download_model.py %s'%(sys.argv[1]))
+os.system('/usr/local/epd-7.3-2/bin/python download_model.py %s'%(sys.argv[1]))
 
 # load country list
 country_list = pandas.read_csv('/snfs1/DATA/IHME_COUNTRY_CODES/IHME_COUNTRYCODES.CSV', index_col=None)
