@@ -38,13 +38,13 @@ for country in country_list: #['USA', 'GBR']:
     for sex in ['male', 'female']:
         name = country + str(sys.argv[3]) + sex
         name_list.append(name)
-        os.system('/usr/local/bin/SGE/bin/lx24-amd64/qsub -cwd -N ' + name + ' /homes/peterhm/gbd/dmco_fit_posterior.sh %s %s %s %s %s %s %s' %(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], country, sex))
+        os.system('/usr/local/bin/SGE/bin/lx24-amd64/qsub -cwd -N ' + name + ' dmco_fit_posterior.sh "%s" "%s" "%s" "%s" "%s" "%s" "%s"' %(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], country, sex))
 
 pandas.DataFrame(name_list).to_csv('/home/j/Project/dismod/dismod_status/prod/dm-%s/posterior/stdout/name_list.csv'%(sys.argv[1]))
         
 # creating figures in .pdf
 hold_str = '-hold_jid %s ' % ','.join(name_list)
-os.system('/usr/local/bin/SGE/bin/lx24-amd64/qsub -cwd ' + hold_str + ' /homes/peterhm/gbd/dmco_plot_fits_pdf.sh %s %s %s %s' %(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
+os.system('/usr/local/bin/SGE/bin/lx24-amd64/qsub -cwd ' + hold_str + ' dmco_plot_fits_pdf.sh "%s" "%s" "%s" "%s"' %(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
 
 # record time of process
 pandas.DataFrame({'job':'LAUNCH','time':time.time() - start}, index=[0]).to_csv('/home/j/Project/dismod/dismod_status/prod/dm-%s/posterior/stdout/timesheet.csv'%(sys.argv[1]))
