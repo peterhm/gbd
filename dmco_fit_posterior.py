@@ -50,12 +50,12 @@ print 'country', country
 print 'sex', sex 
 
 # run settings
-iter=102
-burn=1
-thin=1
-# iter=20000
-# burn=10000
-# thin=10
+# iter=102
+# burn=1
+# thin=1
+iter=20000
+burn=10000
+thin=10
 
 # load country model and add country-specific mortality estimates
 model = dmco.load_new_model(data_num, country, sex, cov='average')

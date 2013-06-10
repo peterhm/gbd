@@ -13,6 +13,9 @@ import time
 import sys
 import os
 
+print sys.argv[4]
+print sys.argv[5]
+
 # time process
 start = time.time()
 
@@ -41,7 +44,7 @@ for country in country_list: #['USA', 'GBR']:
         os.system('/usr/local/bin/SGE/bin/lx24-amd64/qsub -cwd -N ' + name + ' /homes/peterhm/gbd/dmco_fit_posterior.sh %s %s %s %s %s %s %s' %(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], country, sex))
 
 pandas.DataFrame(name_list).to_csv('/home/j/Project/dismod/dismod_status/prod/dm-%s/posterior/stdout/name_list.csv'%(sys.argv[1]))
-        
+
 # creating figures in .pdf
 hold_str = '-hold_jid %s ' % ','.join(name_list)
 os.system('/usr/local/bin/SGE/bin/lx24-amd64/qsub -cwd ' + hold_str + ' /homes/peterhm/gbd/dmco_plot_fits_pdf.sh %s %s %s %s' %(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
