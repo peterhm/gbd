@@ -23,7 +23,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/boost-current/lib
 umask 002
 
 echo calling python -u "$@"
-/usr/local/epd-7.0-2/bin/python -u "$@"
+/usr/local/epd-7.3-2/bin/python -u "$@"
 
 
 ## Put the current date into a variable and report it before we exit.

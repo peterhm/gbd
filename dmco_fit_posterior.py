@@ -59,7 +59,7 @@ thin=10
 
 # load country model and add country-specific mortality estimates
 model = dmco.load_new_model(data_num, country, sex, cov='average')
-mortality = pandas.read_csv('/homes/peterhm/gbd/dmco_mortality.csv')
+mortality = pandas.read_csv('/home/j/Project/dismod/dmco_mortality.csv')
 dmco.add_data(model, mortality, country, sex, year)
 model.keep(start_year=year-2)
 model.keep(end_year=year+2)
