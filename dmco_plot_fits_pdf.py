@@ -25,6 +25,12 @@ year = int(sys.argv[3])
 param_type_list = sys.argv[4].split(' ')
 name_list = list(pandas.read_csv('/home/j/Project/dismod/dismod_status/prod/dm-%s/posterior/stdout/name_list.csv'%(data_num), index_col=0)['0'])
 
+print 'data_num', data_num
+print 'prior_num', prior_num 
+print 'year', year 
+print 'param_type_list', param_type_list
+print 'rate_type_list', rate_type_list
+
 # create graphics
 param_type_list.append('m_all')
 dmco.plot_fits_pdf(data_num, prior_num, year, param_type_list)
