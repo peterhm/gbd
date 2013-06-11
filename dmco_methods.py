@@ -383,6 +383,8 @@ def plot_fits_pdf(disease, prior, year, param_type_list, filename=''):
         pl.figure(c, figsize=(len(param_type_list)*4,8))
         for s,sex in enumerate(['male', 'female']):
             model = load_new_model(disease, country, sex)
+            model.keep(start_year=year-2)
+            model.keep(end_year=year+2)
             add_data(model, mortality, country, sex, year)
             for j,data_type in enumerate(param_type_list):
                 pl.subplot(2,len(param_type_list),(j+1)+(s*len(param_type_list)))
