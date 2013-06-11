@@ -414,7 +414,7 @@ def plot_fits_pdf(disease, prior, year, param_type_list, filename=''):
                     pl.axis([-5, 105, -ymax*.05, ymax*1.1])
                 pl.title(country +' '+ data_type +' '+ sex +' '+ str(year) )
                 if sex == 'male': pl.legend(loc=(.25,1.145))
-        pl.subplots_adjust(top=.85, bottom=.05)
+        pl.subplots_adjust(top=.83, bottom=.07)
 
         pp.savefig(c)
         pl.clf()
