@@ -1,9 +1,9 @@
 '''
-Run with the following arguments: data_num prior_num year rate_type_list
+Run with the following arguments: data_num prior_num year param_type_list
 data_num : int, location of data
 prior_num : int, location of the priors
 year : int, 1990, 2005, or 2010
-rate_type_list : str, list of rate_types separated by ' ', ex. 'p i f r' 
+param_type_list : str, list of rate_types separated by ' ', ex. 'p i f r' 
 '''
 
 import matplotlib
@@ -29,7 +29,6 @@ print 'data_num', data_num
 print 'prior_num', prior_num 
 print 'year', year 
 print 'param_type_list', param_type_list
-print 'rate_type_list', rate_type_list
 
 # create graphics
 param_type_list.append('m_all')

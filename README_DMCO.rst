@@ -75,11 +75,11 @@ This file compiles all of the graphics of country-sex-year specific estimates an
 '/home/j/Project/dismod/dismod_status/prod/dm-%s/image/%s_w_prior_%s_%s.pdf'%(disease, prior, year, filename)
 The estimates of all jobs are also compiled and recorded at this location '/home/j/Project/dismod/dismod_status/prod/dm-%s/posterior/stdout/timesheet.csv'%(data_num)
 
-Run with the following arguments: data_num prior_num year rate_type_list
+Run with the following arguments: data_num prior_num year param_type_list
 data_num : int, location of data
 prior_num : int, location of the priors
 year : int, 1990, 2005, or 2010
-rate_type_list : str, list of rate_types separated by ' ', ex. 'p i f r' 
+param_type_list : str, list of rate_types separated by ' ', ex. 'p i f r' 
 
 You may need to change the data_types that are plotted.  For example, you have a prevalence-only model and don't want to see mortality data or you only wanted priors for prevalence and incidence but also want to see remission estimates.  This can be done by changing param_type_list.append().  You can also change the filename of the pdf which is an option of dmco_methods.plot_fits_pdf().
 
