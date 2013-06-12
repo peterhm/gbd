@@ -309,6 +309,10 @@ def consistent(model, reference_area='all', reference_sex='total', reference_yea
         rate_type['m_with'] = 'neg_binom'
     if 'i' not in rate_type.keys():
         rate_type['i'] = 'neg_binom'
+    if 'r' not in rate_type.keys():
+        rate_type['r'] = 'neg_binom'
+    if 'f' not in rate_type.keys():
+        rate_type['f'] = 'neg_binom'
 
     rate = {}
     ages = model.parameters['ages']
